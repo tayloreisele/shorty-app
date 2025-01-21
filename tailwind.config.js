@@ -7,4 +7,10 @@ module.exports = {
     extend: {},
   },
   plugins: [],
+  safelist: [
+    'w-5',
+    'h-5',
+    'mr-3',
+    'ml-auto'
+  ]
 }

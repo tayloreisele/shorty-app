@@ -1,0 +1,99 @@
+/* Add these at the top of your globals.css */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* Base styles for the command palette modal */
+.command-palette {
+  background: rgba(23, 23, 23, 0.8); /* Dark semi-transparent background */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
+  width: 640px;
+  padding: 16px;
+  color: #ffffff;
+}
+
+/* Search input styling */
+.search-input {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: #ffffff;
+  width: 100%;
+  font-size: 16px;
+}
+
+/* List items styling */
+.command-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  margin: 4px 0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.command-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Background gradient */
+.gradient-bg {
+  background: linear-gradient(
+    135deg,
+    #ff3366 0%,
+    #9933ff 50%,
+    #3366ff 100%
+  );
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-size: 400% 400%;
+  animation: gradient 15s ease infinite;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Keyboard shortcut badges */
+.shortcut-badge {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-left: auto;
+}
+
+/* Add this if you're not using Tailwind */
+.w-5 {
+  width: 1.25rem;
+}
+
+.h-5 {
+  height: 1.25rem;
+}
+
+.mr-3 {
+  margin-right: 0.75rem;
+} 

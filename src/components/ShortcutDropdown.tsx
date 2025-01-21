@@ -35,7 +35,15 @@ export const ShortcutDropdown: React.FC<ShortcutDropdownProps> = ({ onOpenSettin
   const sortedApps = Object.keys(groupedShortcuts).sort();
 
   return (
-    <div className="w-[368px] bg-black rounded-lg shadow-2xl border border-gray-800/50 overflow-x-hidden">
+    <div 
+      className="w-[368px] bg-black overflow-x-hidden shadow-2xl" 
+      style={{ 
+        borderTopLeftRadius: '0px',
+        borderTopRightRadius: '0px',
+        borderBottomLeftRadius: '8px',
+        borderBottomRightRadius: '8px',
+      }}
+    >
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
         <h2 className="text-base font-medium text-white">Shorty</h2>
         <div className="flex gap-1">

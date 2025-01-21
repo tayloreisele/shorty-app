@@ -1,5 +1,6 @@
 import { app, BrowserWindow, globalShortcut, screen } from 'electron';
 import * as path from 'path';
+import './styles/globals.css'
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -11,57 +12,138 @@ declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 let mainWindow: BrowserWindow | null = null;
 
 const createWindow = (): void => {
-  // Create the browser window.
+  // Get screen dimensions for centering
+  const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+  console.log('Creating window with dimensions:', { screenWidth, screenHeight });
+  
   mainWindow = new BrowserWindow({
-    width: 384, // w-96 in Tailwind
-    height: 480,
+    width: 900,
+    height: 600,
     frame: false,
     transparent: true,
+    titleBarStyle: 'customButtonsOnHover',
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
     },
+    // Window behavior
     skipTaskbar: true,
-    show: false
+    show: false,
+    alwaysOnTop: true,
+    // Appearance
+    hasShadow: false,
+    backgroundColor: '#00000000',
+    // Position in exact center of screen
+    x: Math.floor(screenWidth / 2 - 450),
+    y: Math.floor(screenHeight / 2 - 300),
+    // Window behavior
+    movable: true,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    // Vibrancy (macOS)
+    vibrancy: 'under-window',
+    visualEffectState: 'active'
   });
 
-  // and load the index.html of the app.
+  // Debug window state
+  mainWindow.webContents.on('did-finish-load', () => {
+    console.log('Window finished loading');
+  });
+
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    console.log('Window failed to load:', errorDescription);
+  });
+
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
-  // Position window below the notch
-  const { width: screenWidth } = screen.getPrimaryDisplay().workAreaSize;
-  mainWindow.setPosition(
-    Math.floor(screenWidth / 2 - 192), // Center horizontally (384/2 = 192)
-    0
-  );
-
   // Register global shortcut to toggle window
-  globalShortcut.register('CommandOrControl+Shift+Space', () => {
-    if (mainWindow?.isVisible()) {
+  const registered = globalShortcut.register('CommandOrControl+Shift+Space', () => {
+    console.log('Shortcut triggered!');
+    if (!mainWindow) {
+      console.log('No window found');
+      return;
+    }
+
+    if (mainWindow.isVisible()) {
+      console.log('Hiding window');
       mainWindow.hide();
     } else {
-      mainWindow?.show();
-      mainWindow?.focus();
+      console.log('Showing window');
+      // Force window to be visible
+      mainWindow.setAlwaysOnTop(true);
+      mainWindow.show();
+      mainWindow.focus();
+      // Position window in center screen
+      const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+      mainWindow.setPosition(
+        Math.floor(screenWidth / 2 - 450),
+        Math.floor(screenHeight / 2 - 300)
+      );
+      // Ensure window is visible by bringing it to front
+      mainWindow.moveTop();
+      
+      // Log window bounds for debugging
+      const bounds = mainWindow.getBounds();
+      console.log('Window bounds:', bounds);
+      console.log('Window visible:', mainWindow.isVisible());
+    }
+  });
+
+  console.log('Shortcut registered:', registered);
+
+  // Hide from dock
+  if (process.platform === 'darwin') {
+    app.dock.hide();
+  }
+
+  // When window is ready
+  mainWindow.once('ready-to-show', () => {
+    console.log('Window ready to show');
+    if (mainWindow) {
+      // Initial positioning
+      const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+      mainWindow.setPosition(
+        Math.floor(screenWidth / 2 - 450),
+        Math.floor(screenHeight / 2 - 300)
+      );
+      // Log initial window state
+      const bounds = mainWindow.getBounds();
+      console.log('Initial window bounds:', bounds);
+    }
+  });
+
+  // Hide window when focus is lost
+  mainWindow.on('blur', () => {
+    if (mainWindow?.isVisible()) {
+      mainWindow.hide();
     }
   });
 };
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-app.on('ready', createWindow);
+// Set the app name to ensure proper window type
+app.name = 'Shorty';
+
+// Handle activation
+app.whenReady().then(() => {
+  // Unregister any existing shortcuts first
+  globalShortcut.unregisterAll();
+  
+  createWindow();
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
+  });
+});
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
+  globalShortcut.unregisterAll();
   if (process.platform !== 'darwin') {
     app.quit();
-  }
-});
-
-app.on('activate', () => {
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
   }
 });
 
