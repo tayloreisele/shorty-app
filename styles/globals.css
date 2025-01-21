@@ -12,8 +12,8 @@ body {
 
 /* Base styles for the command palette modal */
 .command-palette {
-  background: rgba(23, 23, 23, 0.8); /* Dark semi-transparent background */
-  backdrop-filter: blur(20px);
+  background: rgba(23, 23, 23, 0.8);
+  backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 12px;
   box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);

@@ -42,8 +42,8 @@ const createWindow = (): void => {
     minimizable: false,
     maximizable: false,
     fullscreenable: false,
-    // Vibrancy (macOS)
-    vibrancy: 'under-window',
+    // Enable vibrancy
+    vibrancy: 'fullscreen-ui',
     visualEffectState: 'active'
   });
 
