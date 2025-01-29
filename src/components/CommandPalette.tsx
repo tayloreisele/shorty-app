@@ -23,6 +23,24 @@ const CommandPalette: React.FC = () => {
   const store = useShortcutStore();
   console.log('Full store state:', store);
   
+  // Focus search input when window becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        searchInputRef.current?.focus();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    // Also focus when the window gains focus
+    window.addEventListener('focus', () => searchInputRef.current?.focus());
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', () => searchInputRef.current?.focus());
+    };
+  }, []);
+  
   // Split shortcuts into system and app-specific
   const allShortcuts = Object.values(store.shortcuts || {});
   const systemShortcuts = allShortcuts.filter(s => s.isGlobal);
