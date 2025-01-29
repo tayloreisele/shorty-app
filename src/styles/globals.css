@@ -306,12 +306,20 @@ body {
   color: rgba(255, 255, 255, 0.6);
   font-size: 13px;
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition: all 0.15s ease;
   border-top: 0.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 4px 12px;
 }
 
 .see-more:hover {
+  background: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.8);
+}
+
+.see-more.bg-gray-800\/50 {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .expanded-header {
@@ -335,6 +343,11 @@ body {
 .back-button:hover {
   background: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.8);
+}
+
+.back-button.bg-gray-800\/50 {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .expanded-title {
