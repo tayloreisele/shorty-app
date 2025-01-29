@@ -9,7 +9,7 @@ type ExpandedView = {
 };
 
 type Selection = {
-  column: 'system' | 'favorites';
+  column: 'left' | 'right' | 'back';
   index: number;
 };
 
@@ -18,7 +18,7 @@ const CommandPalette: React.FC = () => {
   
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedView, setExpandedView] = useState<ExpandedView>({ type: null });
-  const [selectedItem, setSelectedItem] = useState<Selection>({ column: 'system', index: 0 });
+  const [selectedItem, setSelectedItem] = useState<Selection>({ column: 'left', index: 0 });
   const searchInputRef = useRef<HTMLInputElement>(null);
   const store = useShortcutStore();
   console.log('Full store state:', store);
@@ -36,13 +36,69 @@ const CommandPalette: React.FC = () => {
   const favoriteShortcuts = systemShortcuts.slice(0, MAX_VISIBLE_SHORTCUTS);
   const hasMoreFavorites = systemShortcuts.length > MAX_VISIBLE_SHORTCUTS;
 
-  // Handle keyboard navigation
-  const handleKeyDown = (e: KeyboardEvent) => {
+  // Handle keyboard navigation for expanded view
+  const handleExpandedKeyDown = (e: KeyboardEvent) => {
+    if (!expandedView.type) return;
+
+    const shortcuts = expandedView.type === 'system' ? systemShortcuts : favoriteShortcuts;
+    const midPoint = Math.ceil(shortcuts.length / 2);
+    const leftColumnShortcuts = shortcuts.slice(0, midPoint);
+    const rightColumnShortcuts = shortcuts.slice(midPoint);
+    
+    if (e.key === 'Enter' && selectedItem.column === 'back') {
+      e.preventDefault();
+      handleBack();
+      return;
+    }
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (selectedItem.column === 'back') {
+        setSelectedItem({ column: 'left', index: 0 });
+      } else {
+        const currentShortcuts = selectedItem.column === 'left' ? leftColumnShortcuts : rightColumnShortcuts;
+        const maxIndex = currentShortcuts.length - 1;
+        let newIndex = selectedItem.index;
+        newIndex = newIndex < maxIndex ? newIndex + 1 : 0;
+        setSelectedItem({ ...selectedItem, index: newIndex });
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (selectedItem.column === 'back') {
+        return;
+      }
+      const currentShortcuts = selectedItem.column === 'left' ? leftColumnShortcuts : rightColumnShortcuts;
+      const maxIndex = currentShortcuts.length - 1;
+      let newIndex = selectedItem.index;
+      if (newIndex > 0) {
+        newIndex = newIndex - 1;
+        setSelectedItem({ ...selectedItem, index: newIndex });
+      } else {
+        setSelectedItem({ column: 'back', index: 0 });
+      }
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      if (selectedItem.column === 'back') {
+        return;
+      }
+      const newColumn = selectedItem.column === 'left' ? 'right' : 'left';
+      const newShortcuts = newColumn === 'left' ? leftColumnShortcuts : rightColumnShortcuts;
+      setSelectedItem({
+        column: newColumn,
+        index: Math.min(selectedItem.index, newShortcuts.length - 1)
+      });
+    }
+  };
+
+  // Handle keyboard navigation for main view
+  const handleMainViewKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
       const currentColumn = selectedItem.column;
-      const shortcuts = currentColumn === 'system' ? visibleSystemShortcuts : favoriteShortcuts;
-      const maxIndex = shortcuts.length - 1;
+      const shortcuts = currentColumn === 'left' ? visibleSystemShortcuts : favoriteShortcuts;
+      const maxIndex = (currentColumn === 'left' ? hasMoreSystem : hasMoreFavorites) 
+        ? shortcuts.length 
+        : shortcuts.length - 1;
 
       let newIndex = selectedItem.index;
       if (e.key === 'ArrowDown') {
@@ -54,21 +110,40 @@ const CommandPalette: React.FC = () => {
       setSelectedItem({ ...selectedItem, index: newIndex });
     } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
       e.preventDefault();
-      const newColumn = selectedItem.column === 'system' ? 'favorites' : 'system';
-      const shortcuts = newColumn === 'system' ? visibleSystemShortcuts : favoriteShortcuts;
-      const maxIndex = shortcuts.length - 1;
+      const newColumn = selectedItem.column === 'left' ? 'right' : 'left';
+      const shortcuts = newColumn === 'left' ? visibleSystemShortcuts : favoriteShortcuts;
+      const maxIndex = (newColumn === 'left' ? hasMoreSystem : hasMoreFavorites) 
+        ? shortcuts.length 
+        : shortcuts.length - 1;
       
       setSelectedItem({
         column: newColumn,
         index: Math.min(selectedItem.index, maxIndex)
       });
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const currentColumn = selectedItem.column;
+      const shortcuts = currentColumn === 'left' ? visibleSystemShortcuts : favoriteShortcuts;
+      
+      if (selectedItem.index === shortcuts.length) {
+        // Selected the See More button
+        handleSeeMore(currentColumn === 'left' ? 'system' : 'favorites');
+      }
     }
   };
 
   useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedItem, visibleSystemShortcuts, favoriteShortcuts]);
+    const handler = (e: KeyboardEvent) => {
+      if (expandedView.type) {
+        handleExpandedKeyDown(e);
+      } else {
+        handleMainViewKeyDown(e);
+      }
+    };
+    
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [selectedItem, expandedView, systemShortcuts, favoriteShortcuts, visibleSystemShortcuts]);
 
   useEffect(() => {
     console.log('CommandPalette mounted');
@@ -83,10 +158,13 @@ const CommandPalette: React.FC = () => {
 
   const handleSeeMore = (type: 'system' | 'favorites') => {
     setExpandedView({ type });
+    setSelectedItem({ column: 'left', index: 0 });
   };
 
   const handleBack = () => {
     setExpandedView({ type: null });
+    // Reset selection to first item in left column when returning to main view
+    setSelectedItem({ column: 'left', index: 0 });
   };
 
   // Render expanded view
@@ -101,7 +179,12 @@ const CommandPalette: React.FC = () => {
       <div className="command-palette">
         <div className="command-content">
           <div className="expanded-header">
-            <button onClick={handleBack} className="back-button">
+            <button 
+              onClick={handleBack} 
+              className={`back-button ${
+                selectedItem.column === 'back' ? 'bg-gray-800/50' : ''
+              }`}
+            >
               ← Back
             </button>
             <h2 className="expanded-title">{title} Shortcuts</h2>
@@ -109,8 +192,15 @@ const CommandPalette: React.FC = () => {
           
           <div className="command-list expanded">
             <div className="column">
-              {leftColumnShortcuts.map((shortcut) => (
-                <div key={shortcut.id} className="command-item">
+              {leftColumnShortcuts.map((shortcut, index) => (
+                <div 
+                  key={shortcut.id} 
+                  className={`command-item ${
+                    selectedItem.column === 'left' && selectedItem.index === index 
+                      ? 'bg-gray-800/50' 
+                      : ''
+                  }`}
+                >
                   {expandedView.type === 'system' && (
                     <svg 
                       className="w-5 h-5 mr-3" 
@@ -132,8 +222,15 @@ const CommandPalette: React.FC = () => {
               ))}
             </div>
             <div className="column">
-              {rightColumnShortcuts.map((shortcut) => (
-                <div key={shortcut.id} className="command-item">
+              {rightColumnShortcuts.map((shortcut, index) => (
+                <div 
+                  key={shortcut.id} 
+                  className={`command-item ${
+                    selectedItem.column === 'right' && selectedItem.index === index 
+                      ? 'bg-gray-800/50' 
+                      : ''
+                  }`}
+                >
                   {expandedView.type === 'system' && (
                     <svg 
                       className="w-5 h-5 mr-3" 
@@ -154,6 +251,29 @@ const CommandPalette: React.FC = () => {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+
+        <div className="footer-shortcuts">
+          <div>
+            <KeyboardShortcut shortcut="↑↓" />
+            <span>navigate</span>
+          </div>
+          <div>
+            <KeyboardShortcut shortcut="←→" />
+            <span>switch column</span>
+          </div>
+          <div>
+            <KeyboardShortcut shortcut="↵" />
+            <span>select</span>
+          </div>
+          <div>
+            <div className="keyboard-shortcut">
+              <span className="key">⌘</span>
+              <span className="key">⇧</span>
+              <span className="key" style={{ minWidth: '50px' }}>space</span>
+            </div>
+            <span>close</span>
           </div>
         </div>
       </div>
@@ -182,7 +302,7 @@ const CommandPalette: React.FC = () => {
                 <div 
                   key={shortcut.id} 
                   className={`command-item ${
-                    selectedItem.column === 'system' && selectedItem.index === index 
+                    selectedItem.column === 'left' && selectedItem.index === index 
                       ? 'bg-gray-800/50' 
                       : ''
                   }`}
@@ -205,7 +325,14 @@ const CommandPalette: React.FC = () => {
                 </div>
               ))}
               {hasMoreSystem && (
-                <div className="see-more" onClick={() => handleSeeMore('system')}>
+                <div 
+                  className={`see-more ${
+                    selectedItem.column === 'left' && selectedItem.index === visibleSystemShortcuts.length 
+                      ? 'bg-gray-800/50' 
+                      : ''
+                  }`} 
+                  onClick={() => handleSeeMore('system')}
+                >
                   See More →
                 </div>
               )}
@@ -220,7 +347,7 @@ const CommandPalette: React.FC = () => {
                 <div 
                   key={shortcut.id} 
                   className={`command-item ${
-                    selectedItem.column === 'favorites' && selectedItem.index === index 
+                    selectedItem.column === 'right' && selectedItem.index === index 
                       ? 'bg-gray-800/50' 
                       : ''
                   }`}
@@ -230,7 +357,14 @@ const CommandPalette: React.FC = () => {
                 </div>
               ))}
               {hasMoreFavorites && (
-                <div className="see-more" onClick={() => handleSeeMore('favorites')}>
+                <div 
+                  className={`see-more ${
+                    selectedItem.column === 'right' && selectedItem.index === favoriteShortcuts.length 
+                      ? 'bg-gray-800/50' 
+                      : ''
+                  }`} 
+                  onClick={() => handleSeeMore('favorites')}
+                >
                   See More →
                 </div>
               )}
@@ -247,6 +381,10 @@ const CommandPalette: React.FC = () => {
         <div>
           <KeyboardShortcut shortcut="←→" />
           <span>switch column</span>
+        </div>
+        <div>
+          <KeyboardShortcut shortcut="↵" />
+          <span>select</span>
         </div>
         <div>
           <div className="keyboard-shortcut">
