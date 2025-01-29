@@ -17,8 +17,8 @@ const createWindow = (): void => {
   console.log('Creating window with dimensions:', { screenWidth, screenHeight });
   
   mainWindow = new BrowserWindow({
-    width: 900,
-    height: 600,
+    width: 700,
+    height: 500,
     frame: false,
     transparent: true,
     titleBarStyle: 'customButtonsOnHover',
@@ -34,8 +34,8 @@ const createWindow = (): void => {
     hasShadow: false,
     backgroundColor: '#00000000',
     // Position in exact center of screen
-    x: Math.floor(screenWidth / 2 - 450),
-    y: Math.floor(screenHeight / 2 - 300),
+    x: Math.floor(screenWidth / 2 - 350),
+    y: Math.floor(screenHeight / 2 - 250),
     // Window behavior
     movable: true,
     resizable: false,
@@ -78,7 +78,7 @@ const createWindow = (): void => {
       // Position window in center screen
       const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
       mainWindow.setPosition(
-        Math.floor(screenWidth / 2 - 450),
+        Math.floor(screenWidth / 2 - 350),
         Math.floor(screenHeight / 2 - 300)
       );
       // Ensure window is visible by bringing it to front
@@ -105,7 +105,7 @@ const createWindow = (): void => {
       // Initial positioning
       const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
       mainWindow.setPosition(
-        Math.floor(screenWidth / 2 - 450),
+        Math.floor(screenWidth / 2 - 350),
         Math.floor(screenHeight / 2 - 300)
       );
       // Log initial window state
