@@ -8,11 +8,17 @@ type ExpandedView = {
   type: 'system' | 'favorites' | null;
 };
 
+type Selection = {
+  column: 'system' | 'favorites';
+  index: number;
+};
+
 const CommandPalette: React.FC = () => {
   console.log('CommandPalette rendering...');
   
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedView, setExpandedView] = useState<ExpandedView>({ type: null });
+  const [selectedItem, setSelectedItem] = useState<Selection>({ column: 'system', index: 0 });
   const searchInputRef = useRef<HTMLInputElement>(null);
   const store = useShortcutStore();
   console.log('Full store state:', store);
@@ -30,18 +36,39 @@ const CommandPalette: React.FC = () => {
   const favoriteShortcuts = systemShortcuts.slice(0, MAX_VISIBLE_SHORTCUTS);
   const hasMoreFavorites = systemShortcuts.length > MAX_VISIBLE_SHORTCUTS;
 
-  // Group app shortcuts by application
-  const appShortcutsByApp = appShortcuts.reduce((groups, shortcut) => {
-    const app = store.applications[shortcut.application];
-    if (!groups[app.id]) {
-      groups[app.id] = {
-        app,
-        shortcuts: []
-      };
+  // Handle keyboard navigation
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const currentColumn = selectedItem.column;
+      const shortcuts = currentColumn === 'system' ? visibleSystemShortcuts : favoriteShortcuts;
+      const maxIndex = shortcuts.length - 1;
+
+      let newIndex = selectedItem.index;
+      if (e.key === 'ArrowDown') {
+        newIndex = newIndex < maxIndex ? newIndex + 1 : 0;
+      } else {
+        newIndex = newIndex > 0 ? newIndex - 1 : maxIndex;
+      }
+
+      setSelectedItem({ ...selectedItem, index: newIndex });
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      const newColumn = selectedItem.column === 'system' ? 'favorites' : 'system';
+      const shortcuts = newColumn === 'system' ? visibleSystemShortcuts : favoriteShortcuts;
+      const maxIndex = shortcuts.length - 1;
+      
+      setSelectedItem({
+        column: newColumn,
+        index: Math.min(selectedItem.index, maxIndex)
+      });
     }
-    groups[app.id].shortcuts.push(shortcut);
-    return groups;
-  }, {} as Record<string, { app: typeof store.applications[keyof typeof store.applications], shortcuts: typeof appShortcuts }>);
+  };
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedItem, visibleSystemShortcuts, favoriteShortcuts]);
 
   useEffect(() => {
     console.log('CommandPalette mounted');
@@ -151,8 +178,15 @@ const CommandPalette: React.FC = () => {
           <div className="column">
             <h2 className="column-title">System</h2>
             <div className="command-list">
-              {visibleSystemShortcuts.map((shortcut) => (
-                <div key={shortcut.id} className="command-item">
+              {visibleSystemShortcuts.map((shortcut, index) => (
+                <div 
+                  key={shortcut.id} 
+                  className={`command-item ${
+                    selectedItem.column === 'system' && selectedItem.index === index 
+                      ? 'bg-gray-800/50' 
+                      : ''
+                  }`}
+                >
                   <svg 
                     className="w-5 h-5 mr-3" 
                     viewBox="0 0 24 24" 
@@ -182,8 +216,15 @@ const CommandPalette: React.FC = () => {
           <div className="column">
             <h2 className="column-title">Favorites</h2>
             <div className="command-list">
-              {favoriteShortcuts.map((shortcut) => (
-                <div key={shortcut.id} className="command-item">
+              {favoriteShortcuts.map((shortcut, index) => (
+                <div 
+                  key={shortcut.id} 
+                  className={`command-item ${
+                    selectedItem.column === 'favorites' && selectedItem.index === index 
+                      ? 'bg-gray-800/50' 
+                      : ''
+                  }`}
+                >
                   <span>{shortcut.name}</span>
                   <KeyboardShortcut shortcut={shortcut.keys} />
                 </div>
@@ -200,15 +241,19 @@ const CommandPalette: React.FC = () => {
       
       <div className="footer-shortcuts">
         <div>
-          <span className="shortcut-badge">↑↓</span>
+          <KeyboardShortcut shortcut="↑↓" />
           <span>navigate</span>
         </div>
         <div>
-          <span className="shortcut-badge">↵</span>
-          <span>open</span>
+          <KeyboardShortcut shortcut="←→" />
+          <span>switch column</span>
         </div>
         <div>
-          <span className="shortcut-badge">esc</span>
+          <div className="keyboard-shortcut">
+            <span className="key">⌘</span>
+            <span className="key">⇧</span>
+            <span className="key" style={{ minWidth: '50px' }}>space</span>
+          </div>
           <span>close</span>
         </div>
       </div>
