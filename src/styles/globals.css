@@ -718,3 +718,137 @@ body {
     display: none;
   }
 }
+
+.shortcut-details {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.shortcut-details.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.shortcut-input-container.dimmed {
+  opacity: 0.5;
+  transition: opacity 0.3s ease;
+}
+
+.details-input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 0.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: white;
+  font-size: 13px;
+  transition: all 0.2s ease;
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.1);
+}
+
+.details-input:focus {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  outline: none;
+}
+
+.details-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.details-description {
+  min-height: 60px;
+  resize: none;
+}
+
+.save-button {
+  align-self: flex-start;
+  padding: 6px 14px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.15);
+  border: 0.5px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  transition: all 0.15s ease;
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.1);
+}
+
+.save-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.save-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.app-selector {
+  width: 100%;
+}
+
+.dropdown-container {
+  position: relative;
+}
+
+.app-dropdown {
+  width: 100%;
+  appearance: none;
+  padding-right: 32px !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(255, 255, 255, 0.5)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+}
+
+.app-dropdown option {
+  background-color: rgba(18, 18, 18, 0.95);
+  color: white;
+  padding: 8px;
+}
+
+.new-app-input {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.new-app-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.app-action-button {
+  padding: 4px 12px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.3);
+  border: 0.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.app-action-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.app-action-button.confirm {
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.app-action-button.confirm:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.app-action-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

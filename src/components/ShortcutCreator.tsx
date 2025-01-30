@@ -1,5 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
+interface App {
+  id: string;
+  name: string;
+  icon?: string;
+}
+
 interface ShortcutCreatorProps {
   onClose: () => void;
   isOpen: boolean;
@@ -9,11 +15,33 @@ const ShortcutCreator: React.FC<ShortcutCreatorProps> = ({ onClose, isOpen }) =>
   const [shortcutKeys, setShortcutKeys] = useState<string[]>([]);
   const [isListening, setIsListening] = useState(false);
   const [showModifierPulse, setShowModifierPulse] = useState(true);
+  const [showDetails, setShowDetails] = useState(false);
+  const [shortcutName, setShortcutName] = useState('');
+  const [shortcutDescription, setShortcutDescription] = useState('');
+  const [selectedApp, setSelectedApp] = useState<App | null>(null);
+  const [isAddingApp, setIsAddingApp] = useState(false);
+  const [newAppName, setNewAppName] = useState('');
+  const [apps, setApps] = useState<App[]>([
+    { id: '1', name: 'Chrome' },
+    { id: '2', name: 'VS Code' },
+    { id: '3', name: 'Finder' },
+  ]);
 
   const clearShortcut = () => {
     setShortcutKeys([]);
     setIsListening(false);
     setShowModifierPulse(true);
+    setShowDetails(false);
+    setShortcutName('');
+    setShortcutDescription('');
+    setSelectedApp(null);
+    setIsAddingApp(false);
+    setNewAppName('');
+  };
+
+  const handleBack = () => {
+    setShowDetails(false);
+    setIsListening(true);
   };
 
   const addModifier = (key: string) => {
@@ -48,6 +76,7 @@ const ShortcutCreator: React.FC<ShortcutCreatorProps> = ({ onClose, isOpen }) =>
 
     setShortcutKeys(prev => [...prev, key]);
     setIsListening(false);
+    setShowDetails(true);
   }, [isListening]);
 
   useEffect(() => {
@@ -72,6 +101,19 @@ const ShortcutCreator: React.FC<ShortcutCreatorProps> = ({ onClose, isOpen }) =>
       setShowModifierPulse(true);
     }
   }, [isOpen]);
+
+  const handleAddApp = () => {
+    if (newAppName.trim()) {
+      const newApp = {
+        id: Date.now().toString(),
+        name: newAppName.trim()
+      };
+      setApps(prev => [...prev, newApp]);
+      setSelectedApp(newApp);
+      setIsAddingApp(false);
+      setNewAppName('');
+    }
+  };
 
   return (
     <>
@@ -103,7 +145,7 @@ const ShortcutCreator: React.FC<ShortcutCreatorProps> = ({ onClose, isOpen }) =>
           Create a shortcut by selecting modifiers and pressing any key
         </p>
 
-        <div className="shortcut-input-container">
+        <div className={`shortcut-input-container ${showDetails ? 'dimmed' : ''}`}>
           <div className={`modifier-buttons ${showModifierPulse ? 'pulse' : ''}`}>
             <div className="modifier-key-wrapper">
               <div className="modifier-tooltip">Command</div>
@@ -155,12 +197,88 @@ const ShortcutCreator: React.FC<ShortcutCreatorProps> = ({ onClose, isOpen }) =>
           {shortcutKeys.length > 0 && (
             <button 
               className="clear-button"
-              onClick={clearShortcut}
+              onClick={showDetails ? handleBack : clearShortcut}
             >
-              Clear
+              {showDetails ? 'Back' : 'Clear'}
             </button>
           )}
         </div>
+
+        {showDetails && (
+          <div className={`shortcut-details ${showDetails ? 'active' : ''}`}>
+            <input
+              type="text"
+              className="details-input"
+              placeholder="Shortcut name"
+              value={shortcutName}
+              onChange={(e) => setShortcutName(e.target.value)}
+              autoFocus
+            />
+            <textarea
+              className="details-input details-description"
+              placeholder="Description (optional)"
+              value={shortcutDescription}
+              onChange={(e) => setShortcutDescription(e.target.value)}
+            />
+            
+            <div className="app-selector">
+              {!isAddingApp ? (
+                <div className="dropdown-container">
+                  <select
+                    className="details-input app-dropdown"
+                    value={selectedApp?.id || ''}
+                    onChange={(e) => {
+                      if (e.target.value === 'add') {
+                        setIsAddingApp(true);
+                      } else {
+                        setSelectedApp(apps.find(app => app.id === e.target.value) || null);
+                      }
+                    }}
+                  >
+                    <option value="">Select an app...</option>
+                    <option value="add">+ Add new app</option>
+                    {apps.map(app => (
+                      <option key={app.id} value={app.id}>{app.name}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="new-app-input">
+                  <input
+                    type="text"
+                    className="details-input"
+                    placeholder="Enter app name"
+                    value={newAppName}
+                    onChange={(e) => setNewAppName(e.target.value)}
+                    autoFocus
+                  />
+                  <div className="new-app-actions">
+                    <button 
+                      className="app-action-button"
+                      onClick={() => setIsAddingApp(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      className="app-action-button confirm"
+                      onClick={handleAddApp}
+                      disabled={!newAppName.trim()}
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <button 
+              className="save-button"
+              disabled={!shortcutName.trim() || !selectedApp}
+            >
+              Save Shortcut
+            </button>
+          </div>
+        )}
       </div>
     </>
   );
