@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import useShortcutStore from '../store/useShortcutStore';
 import KeyboardShortcut from './KeyboardShortcut';
 import HighlightedText from './HighlightedText';
+import ShortcutCreator from './ShortcutCreator';
 
 const MAX_VISIBLE_SHORTCUTS = 10;
 
@@ -20,6 +21,7 @@ const CommandPalette: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedView, setExpandedView] = useState<ExpandedView>({ type: null });
   const [selectedItem, setSelectedItem] = useState<Selection>({ column: 'left', index: 0 });
+  const [isShortcutCreatorOpen, setIsShortcutCreatorOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const store = useShortcutStore();
   console.log('Full store state:', store);
@@ -202,132 +204,39 @@ const CommandPalette: React.FC = () => {
     setSelectedItem({ column: 'left', index: 0 });
   };
 
-  // Render expanded view
-  if (expandedView.type) {
-    const shortcuts = expandedView.type === 'system' ? systemShortcuts : favoriteShortcuts;
-    const title = expandedView.type === 'system' ? 'System' : 'Favorites';
-    const midPoint = Math.ceil(shortcuts.length / 2);
-    const leftColumnShortcuts = shortcuts.slice(0, midPoint);
-    const rightColumnShortcuts = shortcuts.slice(midPoint);
-
-    return (
-      <div className="command-palette">
-        <div className="command-content">
-          <div className="expanded-header">
-            <button 
-              onClick={handleBack} 
-              className={`back-button ${
-                selectedItem.column === 'back' ? 'bg-gray-800/50' : ''
-              }`}
-            >
-              ← Back
-            </button>
-            <h2 className="expanded-title">{title} Shortcuts</h2>
-          </div>
-          
-          <div className="command-list expanded">
-            <div className="column">
-              {leftColumnShortcuts.map((shortcut, index) => (
-                <div 
-                  key={shortcut.id} 
-                  className={`command-item ${
-                    selectedItem.column === 'left' && selectedItem.index === index 
-                      ? 'bg-gray-800/50' 
-                      : ''
-                  }`}
-                >
-                  {expandedView.type === 'system' && (
-                    <svg 
-                      className="w-5 h-5 mr-3" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor"
-                    >
-                      <path 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        strokeWidth={1.5}
-                        d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" 
-                      />
-                    </svg>
-                  )}
-                  <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
-                  <KeyboardShortcut shortcut={shortcut.keys} />
-                </div>
-              ))}
-            </div>
-            <div className="column">
-              {rightColumnShortcuts.map((shortcut, index) => (
-                <div 
-                  key={shortcut.id} 
-                  className={`command-item ${
-                    selectedItem.column === 'right' && selectedItem.index === index 
-                      ? 'bg-gray-800/50' 
-                      : ''
-                  }`}
-                >
-                  {expandedView.type === 'system' && (
-                    <svg 
-                      className="w-5 h-5 mr-3" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor"
-                    >
-                      <path 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        strokeWidth={1.5}
-                        d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" 
-                      />
-                    </svg>
-                  )}
-                  <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
-                  <KeyboardShortcut shortcut={shortcut.keys} />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="footer-shortcuts">
-          <div>
-            <KeyboardShortcut shortcut="↑↓" />
-            <span>navigate</span>
-          </div>
-          <div>
-            <KeyboardShortcut shortcut="←→" />
-            <span>switch column</span>
-          </div>
-          <div>
-            <KeyboardShortcut shortcut="↵" />
-            <span>select</span>
-          </div>
-          <div>
-            <div className="keyboard-shortcut">
-              <span className="key">⌘</span>
-              <span className="key">⇧</span>
-              <span className="key" style={{ minWidth: '50px' }}>space</span>
-            </div>
-            <span>close</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Render main view
   return (
     <div className="command-palette">
       <div className="command-content">
-        <input 
-          ref={searchInputRef}
-          type="text" 
-          className="search-input"
-          placeholder="Find a shortcut..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        
+        <div className="search-header">
+          <input 
+            ref={searchInputRef}
+            type="text" 
+            className="search-input"
+            placeholder="Find a shortcut..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <button
+            className="add-shortcut-button"
+            onClick={() => setIsShortcutCreatorOpen(true)}
+            title="Add Shortcut"
+          >
+            <svg 
+              className="plus-icon" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor"
+              strokeWidth="1.25"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                d="M12 4v16m8-8H4" 
+              />
+            </svg>
+          </button>
+        </div>
+
         {systemShortcuts.length === 0 && favoriteShortcuts.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state-icon">
@@ -454,6 +363,11 @@ const CommandPalette: React.FC = () => {
           <span>close</span>
         </div>
       </div>
+
+      <ShortcutCreator
+        isOpen={isShortcutCreatorOpen}
+        onClose={() => setIsShortcutCreatorOpen(false)}
+      />
     </div>
   );
 };
