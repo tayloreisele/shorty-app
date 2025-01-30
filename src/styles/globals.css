@@ -406,3 +406,41 @@ body {
   font-size: 12px;
   user-select: none;
 }
+
+/* Empty state */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.empty-state-icon {
+  margin-bottom: 16px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.empty-state-title {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.empty-state-description {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Highlighted text */
+.highlighted-text {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  padding: 0 2px;
+  margin: 0 -1px;
+  color: rgba(255, 255, 255, 1);
+  font-weight: 500;
+}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import useShortcutStore from '../store/useShortcutStore';
 import KeyboardShortcut from './KeyboardShortcut';
+import HighlightedText from './HighlightedText';
 
 const MAX_VISIBLE_SHORTCUTS = 10;
 
@@ -41,10 +42,21 @@ const CommandPalette: React.FC = () => {
     };
   }, []);
   
+  // Filter shortcuts based on search query
+  const filterShortcuts = (shortcuts: any[]) => {
+    if (!searchQuery.trim()) return shortcuts;
+    
+    const query = searchQuery.toLowerCase().trim();
+    return shortcuts.filter(shortcut => 
+      shortcut.name.toLowerCase().includes(query) || 
+      shortcut.keys.toLowerCase().includes(query)
+    );
+  };
+  
   // Split shortcuts into system and app-specific
   const allShortcuts = Object.values(store.shortcuts || {});
-  const systemShortcuts = allShortcuts.filter(s => s.isGlobal);
-  const appShortcuts = allShortcuts.filter(s => !s.isGlobal);
+  const systemShortcuts = filterShortcuts(allShortcuts.filter(s => s.isGlobal));
+  const appShortcuts = filterShortcuts(allShortcuts.filter(s => !s.isGlobal));
 
   // Get visible shortcuts for each section
   const visibleSystemShortcuts = systemShortcuts.slice(0, MAX_VISIBLE_SHORTCUTS);
@@ -53,6 +65,11 @@ const CommandPalette: React.FC = () => {
   // For now, we'll use system shortcuts as favorites (we'll implement proper favorites later)
   const favoriteShortcuts = systemShortcuts.slice(0, MAX_VISIBLE_SHORTCUTS);
   const hasMoreFavorites = systemShortcuts.length > MAX_VISIBLE_SHORTCUTS;
+
+  // Reset selection when search query changes
+  useEffect(() => {
+    setSelectedItem({ column: 'left', index: 0 });
+  }, [searchQuery]);
 
   // Handle keyboard navigation for expanded view
   const handleExpandedKeyDown = (e: KeyboardEvent) => {
@@ -234,7 +251,7 @@ const CommandPalette: React.FC = () => {
                       />
                     </svg>
                   )}
-                  <span>{shortcut.name}</span>
+                  <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
                   <KeyboardShortcut shortcut={shortcut.keys} />
                 </div>
               ))}
@@ -264,7 +281,7 @@ const CommandPalette: React.FC = () => {
                       />
                     </svg>
                   )}
-                  <span>{shortcut.name}</span>
+                  <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
                   <KeyboardShortcut shortcut={shortcut.keys} />
                 </div>
               ))}
@@ -311,84 +328,108 @@ const CommandPalette: React.FC = () => {
           onChange={(e) => setSearchQuery(e.target.value)}
         />
         
-        <div className="columns-container">
-          {/* System Shortcuts Column */}
-          <div className="column">
-            <h2 className="column-title">System</h2>
-            <div className="command-list">
-              {visibleSystemShortcuts.map((shortcut, index) => (
-                <div 
-                  key={shortcut.id} 
-                  className={`command-item ${
-                    selectedItem.column === 'left' && selectedItem.index === index 
-                      ? 'bg-gray-800/50' 
-                      : ''
-                  }`}
-                >
-                  <svg 
-                    className="w-5 h-5 mr-3" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor"
+        {systemShortcuts.length === 0 && favoriteShortcuts.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-icon">
+              <svg 
+                className="w-8 h-8" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor"
+                strokeWidth="1.5"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" 
+                />
+              </svg>
+            </div>
+            <h3 className="empty-state-title">No shortcuts found</h3>
+            <p className="empty-state-description">
+              Try searching with different keywords
+            </p>
+          </div>
+        ) : (
+          <div className="columns-container">
+            {/* System Shortcuts Column */}
+            <div className="column">
+              <h2 className="column-title">System</h2>
+              <div className="command-list">
+                {visibleSystemShortcuts.map((shortcut, index) => (
+                  <div 
+                    key={shortcut.id} 
+                    className={`command-item ${
+                      selectedItem.column === 'left' && selectedItem.index === index 
+                        ? 'bg-gray-800/50' 
+                        : ''
+                    }`}
                   >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={1.5}
-                      d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" 
-                    />
-                  </svg>
-                  <span>{shortcut.name}</span>
-                  <KeyboardShortcut shortcut={shortcut.keys} />
-                </div>
-              ))}
-              {hasMoreSystem && (
-                <div 
-                  className={`see-more ${
-                    selectedItem.column === 'left' && selectedItem.index === visibleSystemShortcuts.length 
-                      ? 'bg-gray-800/50' 
-                      : ''
-                  }`} 
-                  onClick={() => handleSeeMore('system')}
-                >
-                  See More →
-                </div>
-              )}
+                    <svg 
+                      className="w-5 h-5 mr-3" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={1.5}
+                        d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" 
+                      />
+                    </svg>
+                    <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
+                    <KeyboardShortcut shortcut={shortcut.keys} />
+                  </div>
+                ))}
+                {hasMoreSystem && (
+                  <div 
+                    className={`see-more ${
+                      selectedItem.column === 'left' && selectedItem.index === visibleSystemShortcuts.length 
+                        ? 'bg-gray-800/50' 
+                        : ''
+                    }`} 
+                    onClick={() => handleSeeMore('system')}
+                  >
+                    See More →
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* Favorites Column */}
-          <div className="column">
-            <h2 className="column-title">Favorites</h2>
-            <div className="command-list">
-              {favoriteShortcuts.map((shortcut, index) => (
-                <div 
-                  key={shortcut.id} 
-                  className={`command-item ${
-                    selectedItem.column === 'right' && selectedItem.index === index 
-                      ? 'bg-gray-800/50' 
-                      : ''
-                  }`}
-                >
-                  <span>{shortcut.name}</span>
-                  <KeyboardShortcut shortcut={shortcut.keys} />
-                </div>
-              ))}
-              {hasMoreFavorites && (
-                <div 
-                  className={`see-more ${
-                    selectedItem.column === 'right' && selectedItem.index === favoriteShortcuts.length 
-                      ? 'bg-gray-800/50' 
-                      : ''
-                  }`} 
-                  onClick={() => handleSeeMore('favorites')}
-                >
-                  See More →
-                </div>
-              )}
+            {/* Favorites Column */}
+            <div className="column">
+              <h2 className="column-title">Favorites</h2>
+              <div className="command-list">
+                {favoriteShortcuts.map((shortcut, index) => (
+                  <div 
+                    key={shortcut.id} 
+                    className={`command-item ${
+                      selectedItem.column === 'right' && selectedItem.index === index 
+                        ? 'bg-gray-800/50' 
+                        : ''
+                    }`}
+                  >
+                    <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
+                    <KeyboardShortcut shortcut={shortcut.keys} />
+                  </div>
+                ))}
+                {hasMoreFavorites && (
+                  <div 
+                    className={`see-more ${
+                      selectedItem.column === 'right' && selectedItem.index === favoriteShortcuts.length 
+                        ? 'bg-gray-800/50' 
+                        : ''
+                    }`} 
+                    onClick={() => handleSeeMore('favorites')}
+                  >
+                    See More →
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
       
       <div className="footer-shortcuts">

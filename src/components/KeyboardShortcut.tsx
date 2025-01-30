@@ -41,13 +41,11 @@ const KeyboardShortcut: React.FC<KeyboardShortcutProps> = ({ shortcut }) => {
     }
     return acc;
   }, []);
-
+  
   return (
     <div className="keyboard-shortcut">
       {keys.map((key, index) => (
-        <span key={index} className="key">
-          {key}
-        </span>
+        <span key={index} className="key">{key}</span>
       ))}
     </div>
   );
