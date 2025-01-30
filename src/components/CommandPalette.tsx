@@ -133,9 +133,10 @@ const CommandPalette: React.FC = () => {
       e.preventDefault();
       const currentColumn = selectedItem.column;
       const shortcuts = currentColumn === 'left' ? visibleSystemShortcuts : favoriteShortcuts;
-      const maxIndex = (currentColumn === 'left' ? hasMoreSystem : hasMoreFavorites) 
-        ? shortcuts.length 
-        : shortcuts.length - 1;
+      const hasMore = currentColumn === 'left' ? hasMoreSystem : hasMoreFavorites;
+      
+      // Include the "See More" button in navigation when it exists
+      const maxIndex = hasMore ? shortcuts.length : shortcuts.length - 1;
 
       let newIndex = selectedItem.index;
       if (e.key === 'ArrowDown') {
@@ -149,9 +150,10 @@ const CommandPalette: React.FC = () => {
       e.preventDefault();
       const newColumn = selectedItem.column === 'left' ? 'right' : 'left';
       const shortcuts = newColumn === 'left' ? visibleSystemShortcuts : favoriteShortcuts;
-      const maxIndex = (newColumn === 'left' ? hasMoreSystem : hasMoreFavorites) 
-        ? shortcuts.length 
-        : shortcuts.length - 1;
+      const hasMore = newColumn === 'left' ? hasMoreSystem : hasMoreFavorites;
+      
+      // Include the "See More" button in navigation when it exists
+      const maxIndex = hasMore ? shortcuts.length : shortcuts.length - 1;
       
       setSelectedItem({
         column: newColumn,
