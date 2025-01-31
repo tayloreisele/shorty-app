@@ -261,6 +261,88 @@ const CommandPalette: React.FC = () => {
               Try searching with different keywords
             </p>
           </div>
+        ) : expandedView.type ? (
+          <>
+            <div className="expanded-header">
+              <button 
+                className={`back-button ${selectedItem.column === 'back' ? 'bg-gray-800/50' : ''}`}
+                onClick={handleBack}
+              >
+                ← Back
+              </button>
+              <span className="expanded-title">
+                {expandedView.type === 'system' ? 'System Shortcuts' : 'Favorite Shortcuts'}
+              </span>
+            </div>
+            <div className="command-list expanded">
+              {/* Left Column */}
+              <div className="column">
+                {(expandedView.type === 'system' ? systemShortcuts : favoriteShortcuts)
+                  .slice(0, Math.ceil((expandedView.type === 'system' ? systemShortcuts : favoriteShortcuts).length / 2))
+                  .map((shortcut, index) => (
+                    <div 
+                      key={shortcut.id} 
+                      className={`command-item ${
+                        selectedItem.column === 'left' && selectedItem.index === index 
+                          ? 'bg-gray-800/50' 
+                          : ''
+                      }`}
+                    >
+                      {expandedView.type === 'system' && (
+                        <svg 
+                          className="w-5 h-5 mr-3" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="currentColor"
+                        >
+                          <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            strokeWidth={1.5}
+                            d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" 
+                          />
+                        </svg>
+                      )}
+                      <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
+                      <KeyboardShortcut shortcut={shortcut.keys} />
+                    </div>
+                  ))}
+              </div>
+              {/* Right Column */}
+              <div className="column">
+                {(expandedView.type === 'system' ? systemShortcuts : favoriteShortcuts)
+                  .slice(Math.ceil((expandedView.type === 'system' ? systemShortcuts : favoriteShortcuts).length / 2))
+                  .map((shortcut, index) => (
+                    <div 
+                      key={shortcut.id} 
+                      className={`command-item ${
+                        selectedItem.column === 'right' && selectedItem.index === index 
+                          ? 'bg-gray-800/50' 
+                          : ''
+                      }`}
+                    >
+                      {expandedView.type === 'system' && (
+                        <svg 
+                          className="w-5 h-5 mr-3" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="currentColor"
+                        >
+                          <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            strokeWidth={1.5}
+                            d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" 
+                          />
+                        </svg>
+                      )}
+                      <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
+                      <KeyboardShortcut shortcut={shortcut.keys} />
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </>
         ) : (
           <div className="columns-container">
             {/* System Shortcuts Column */}
