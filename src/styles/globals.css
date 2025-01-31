@@ -351,17 +351,21 @@ body {
   align-items: center;
   margin-bottom: 12px;
   gap: 8px;
+  padding: 0 4px;
 }
 
 .back-button {
-  background: none;
-  border: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
   color: rgba(255, 255, 255, 0.6);
   font-size: 13px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  transition: all 0.15s ease;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
 }
 
 .back-button:hover {
@@ -382,7 +386,6 @@ body {
 
 .command-list.expanded {
   display: flex;
-  flex-direction: row;
   gap: 16px;
   padding: 4px;
   overflow-y: auto;
@@ -394,11 +397,12 @@ body {
   flex-direction: column;
   gap: 1px;
   padding: 0;
+  background: transparent;
 }
 
 .command-list.expanded .command-item {
-  padding: 4px 8px;
-  margin: 0;
+  padding: 6px 12px;
+  margin: 1px 0;
 }
 
 .keyboard-shortcut {
