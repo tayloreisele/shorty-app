@@ -117,26 +117,26 @@ const ShortcutCreator: React.FC<ShortcutCreatorProps> = ({ onClose, isOpen }) =>
 
   return (
     <>
-      <div 
-        className={`shortcut-creator-backdrop ${isOpen ? 'active' : ''}`} 
-        onClick={onClose}
-      />
+      <div className={`shortcut-creator-backdrop ${isOpen ? 'active' : ''}`} onClick={onClose} />
       <div className={`shortcut-creator ${isOpen ? 'active' : ''}`}>
         <div className="shortcut-creator-header">
           <h2>Create Shortcut</h2>
-          <button onClick={onClose} className="close-button">
-            <svg 
-              className="w-5 h-5" 
-              viewBox="0 0 24 24" 
-              fill="none" 
+          <button
+            className="close-button"
+            onClick={onClose}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              width="20"
+              height="20"
               stroke="currentColor"
-              strokeWidth="1.75"
+              strokeWidth="1.5"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                d="M6 18L18 6M6 6l12 12" 
-              />
+              <path d="M18 6L6 18"></path>
+              <path d="M6 6l12 12"></path>
             </svg>
           </button>
         </div>
