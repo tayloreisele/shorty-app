@@ -478,69 +478,95 @@ const CommandPalette: React.FC = () => {
             <div className="column">
               <h2 className="column-title">Favorites</h2>
               <div className="command-list">
-                {favoriteShortcuts.map((shortcut, index) => (
-                  <div 
-                    key={shortcut.id} 
-                    className={`command-item ${
-                      selectedItem.column === 'right' && selectedItem.index === index 
-                        ? 'bg-gray-800/50' 
-                        : ''
-                    }`}
-                    onClick={() => handleToggleFavorite(shortcut.id)}
-                  >
-                    <div className="command-item-content">
-                      {shortcut.isGlobal && (
-                        <svg 
-                          className="w-5 h-5" 
-                          viewBox="0 0 24 24" 
-                          fill="none" 
-                          stroke="currentColor"
-                        >
-                          <path 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round" 
-                            strokeWidth={1.5}
-                            d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" 
-                          />
-                        </svg>
-                      )}
-                      <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
-                      <button
-                        className={`favorite-button ${shortcut.isFavorite ? 'active' : ''}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleFavorite(shortcut.id);
-                        }}
+                {favoriteShortcuts.length === 0 ? (
+                  <div className="empty-state favorites-empty">
+                    <div className="empty-state-icon">
+                      <svg 
+                        className="w-8 h-8" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor"
+                        strokeWidth="1.5"
                       >
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill={shortcut.isFavorite ? "currentColor" : "none"}
-                          stroke="currentColor"
-                          strokeWidth="1"
-                          className={shortcut.isFavorite ? 'text-yellow-400' : 'text-gray-400'}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
-                          />
-                        </svg>
-                      </button>
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
+                        />
+                      </svg>
                     </div>
-                    <KeyboardShortcut shortcut={shortcut.keys} />
+                    <h3 className="empty-state-title">No favorites yet</h3>
+                    <p className="empty-state-description">
+                      Star your most-used shortcuts to access them quickly
+                    </p>
                   </div>
-                ))}
-                {hasMoreFavorites && (
-                  <div 
-                    className={`see-more ${
-                      selectedItem.column === 'right' && selectedItem.index === favoriteShortcuts.length 
-                        ? 'bg-gray-800/50' 
-                        : ''
-                    }`} 
-                    onClick={() => handleSeeMore('favorites')}
-                  >
-                    See More →
-                  </div>
+                ) : (
+                  <>
+                    {favoriteShortcuts.map((shortcut, index) => (
+                      <div 
+                        key={shortcut.id} 
+                        className={`command-item ${
+                          selectedItem.column === 'right' && selectedItem.index === index 
+                            ? 'bg-gray-800/50' 
+                            : ''
+                        }`}
+                        onClick={() => handleToggleFavorite(shortcut.id)}
+                      >
+                        <div className="command-item-content">
+                          {shortcut.isGlobal && (
+                            <svg 
+                              className="w-5 h-5" 
+                              viewBox="0 0 24 24" 
+                              fill="none" 
+                              stroke="currentColor"
+                            >
+                              <path 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round" 
+                                strokeWidth={1.5}
+                                d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" 
+                              />
+                            </svg>
+                          )}
+                          <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
+                          <button
+                            className={`favorite-button ${shortcut.isFavorite ? 'active' : ''}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleFavorite(shortcut.id);
+                            }}
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill={shortcut.isFavorite ? "currentColor" : "none"}
+                              stroke="currentColor"
+                              strokeWidth="1"
+                              className={shortcut.isFavorite ? 'text-yellow-400' : 'text-gray-400'}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                        <KeyboardShortcut shortcut={shortcut.keys} />
+                      </div>
+                    ))}
+                    {hasMoreFavorites && (
+                      <div 
+                        className={`see-more ${
+                          selectedItem.column === 'right' && selectedItem.index === favoriteShortcuts.length 
+                            ? 'bg-gray-800/50' 
+                            : ''
+                        }`} 
+                        onClick={() => handleSeeMore('favorites')}
+                      >
+                        See More →
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>

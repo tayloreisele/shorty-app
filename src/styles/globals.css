@@ -515,9 +515,23 @@ body {
   color: rgba(255, 255, 255, 0.8);
 }
 
+.empty-state.favorites-empty {
+  padding: 32px 16px;
+  min-height: 200px;
+}
+
 .empty-state-icon {
   margin-bottom: 16px;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.favorites-empty .empty-state-icon {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.favorites-empty .empty-state-icon svg {
+  width: 24px;
+  height: 24px;
 }
 
 .empty-state-title {
@@ -530,6 +544,8 @@ body {
 .empty-state-description {
   font-size: 13px;
   color: rgba(255, 255, 255, 0.6);
+  max-width: 200px;
+  margin: 0 auto;
 }
 
 /* Shortcut Creator */
