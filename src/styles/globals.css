@@ -176,12 +176,14 @@ body {
 .command-item {
   display: flex;
   align-items: center;
-  padding: 4px 12px;
+  padding: 4px 8px;
+  margin: 1px 0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
   color: rgba(255, 255, 255, 0.9);
   font-size: 13px;
-  transition: all 0.15s ease;
-  border-radius: 6px;
-  margin: 0;
+  gap: 8px;
 }
 
 .command-item:hover {
@@ -192,11 +194,94 @@ body {
   background: rgba(255, 255, 255, 0.12);
 }
 
-.command-item svg {
+/* Command item content layout */
+.command-item-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* System icon (globe) */
+.command-item-content > svg:first-child {
+  width: 20px;
+  height: 20px;
+  color: rgba(255, 255, 255, 0.6);
+  flex-shrink: 0;
+}
+
+/* Text content */
+.highlighted-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Favorite button */
+.favorite-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 16px;
   height: 16px;
-  margin-right: 12px;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.5);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s ease;
+  padding: 0;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+
+.command-item:hover .favorite-button,
+.command-item.bg-gray-800\/50 .favorite-button {
+  opacity: 1;
+}
+
+.favorite-button:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.favorite-button.active {
+  opacity: 1;
+}
+
+.favorite-button:focus-visible {
+  outline: none;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.favorite-button svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+/* Keyboard shortcut */
+.keyboard-shortcut {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* Remove the spacer div styles since we're not using it anymore */
+.command-item-spacer {
+  display: none;
+}
+
+/* Remove conflicting generic SVG styles */
+.command-item svg {
+  width: unset;
+  height: unset;
+  margin-right: unset;
+  color: unset;
 }
 
 .command-item .shortcut-badge {
@@ -258,21 +343,11 @@ body {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-/* Icons */
-.w-5 {
-  width: 1.25rem;
-}
-
-.h-5 {
-  height: 1.25rem;
-}
-
-.mr-3 {
-  margin-right: 0.75rem;
-}
-
-.ml-auto {
-  margin-left: auto;
+/* Remove any conflicting utility classes */
+.w-5, .h-5, .mr-3 {
+  width: auto;
+  height: auto;
+  margin: 0;
 }
 
 .columns-container {
@@ -366,6 +441,7 @@ body {
   border-radius: 6px;
   transition: all 0.15s ease;
   cursor: pointer;
+  margin-bottom: 16px;
 }
 
 .back-button:hover {
@@ -403,13 +479,6 @@ body {
 .command-list.expanded .command-item {
   padding: 6px 12px;
   margin: 1px 0;
-}
-
-.keyboard-shortcut {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  margin-left: auto;
 }
 
 .key {
@@ -463,16 +532,6 @@ body {
   color: rgba(255, 255, 255, 0.6);
 }
 
-/* Highlighted text */
-.highlighted-text {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
-  padding: 0 2px;
-  margin: 0 -1px;
-  color: rgba(255, 255, 255, 1);
-  font-weight: 500;
-}
-
 /* Shortcut Creator */
 .shortcut-creator-backdrop {
   position: fixed;
@@ -501,11 +560,10 @@ body {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-left: 0.5px solid rgba(255, 255, 255, 0.2);
-  padding: 24px;
+  padding: 0;
   color: white;
   display: flex;
   flex-direction: column;
-  gap: 12px;
   transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: -10px 0 30px rgba(0, 0, 0, 0.2);
 }
@@ -522,31 +580,53 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .shortcut-creator-header h2 {
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
 }
 
 .close-button {
-  padding: 8px;
-  color: rgba(255, 255, 255, 0.5);
-  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
   border: none;
-  margin: -8px;
-  transition: color 0.2s ease;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: -8px -8px -8px 0;
 }
 
 .close-button:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.close-button:active {
   color: rgba(255, 255, 255, 1);
-  background: none;
+}
+
+.shortcut-creator-instruction {
+  padding: 0 16px;
+  margin: 16px 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .shortcut-input-container {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  padding: 0 16px;
 }
 
 .modifier-buttons {
@@ -627,7 +707,7 @@ body {
   align-self: flex-start;
   padding: 4px 12px;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.8);
   background: rgba(0, 0, 0, 0.3);
   border: 0.5px solid rgba(255, 255, 255, 0.15);
   border-radius: 6px;
@@ -644,12 +724,6 @@ body {
 .plus-icon {
   width: 16px !important;
   height: 16px !important;
-}
-
-.shortcut-creator-instruction {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 13px;
-  margin-bottom: 8px;
 }
 
 .modifier-key-wrapper {
@@ -730,6 +804,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  margin-top: 8px;
 }
 
 .shortcut-details.active {
@@ -738,8 +813,19 @@ body {
 }
 
 .shortcut-input-container.dimmed {
-  opacity: 0.5;
+  opacity: 1;
   transition: opacity 0.3s ease;
+}
+
+.shortcut-input-container.dimmed .modifier-buttons,
+.shortcut-input-container.dimmed .shortcut-preview {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.shortcut-input-container.dimmed .back-button {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .details-input {
@@ -769,18 +855,18 @@ body {
 }
 
 .save-button {
-  align-self: flex-start;
-  padding: 6px 14px;
+  padding: 8px 16px;
   font-size: 13px;
   color: rgba(255, 255, 255, 0.9);
   background: rgba(255, 255, 255, 0.15);
   border: 0.5px solid rgba(255, 255, 255, 0.2);
   border-radius: 6px;
   transition: all 0.15s ease;
-  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.1);
+  margin: 16px;
+  cursor: pointer;
 }
 
-.save-button:hover {
+.save-button:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.2);
   border-color: rgba(255, 255, 255, 0.25);
 }
@@ -834,6 +920,7 @@ body {
   border: 0.5px solid rgba(255, 255, 255, 0.15);
   border-radius: 6px;
   transition: all 0.15s ease;
+  margin: 16px;
 }
 
 .app-action-button:hover:not(:disabled) {
@@ -855,4 +942,52 @@ body {
 .app-action-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Make sure active favorites are always visible */
+.favorite-button.active {
+  opacity: 1 !important;
+}
+
+.shortcut-creator input[type="text"],
+.shortcut-creator textarea,
+.shortcut-creator select {
+  width: 100%;
+  padding: 8px 12px;
+  margin: 0 16px;
+  width: calc(100% - 32px);
+  background: rgba(0, 0, 0, 0.2);
+  border: 0.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  transition: all 0.15s ease;
+}
+
+.shortcut-creator input[type="text"]:hover,
+.shortcut-creator textarea:hover,
+.shortcut-creator select:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.shortcut-creator input[type="text"]:focus,
+.shortcut-creator textarea:focus,
+.shortcut-creator select:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.shortcut-creator textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.shortcut-creator select {
+  appearance: none;
+  padding-right: 32px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.6)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
 }

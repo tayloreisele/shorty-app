@@ -24,6 +24,7 @@ const CommandPalette: React.FC = () => {
   const [isShortcutCreatorOpen, setIsShortcutCreatorOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const store = useShortcutStore();
+  const toggleFavorite = useShortcutStore(state => state.toggleFavorite);
   console.log('Full store state:', store);
   
   // Focus search input when window becomes visible
@@ -55,18 +56,17 @@ const CommandPalette: React.FC = () => {
     );
   };
   
-  // Split shortcuts into system and app-specific
+  // Split shortcuts into system and favorites
   const allShortcuts = Object.values(store.shortcuts || {});
   const systemShortcuts = filterShortcuts(allShortcuts.filter(s => s.isGlobal));
-  const appShortcuts = filterShortcuts(allShortcuts.filter(s => !s.isGlobal));
+  const favoriteShortcuts = filterShortcuts(allShortcuts.filter(s => s.isFavorite));
 
   // Get visible shortcuts for each section
   const visibleSystemShortcuts = systemShortcuts.slice(0, MAX_VISIBLE_SHORTCUTS);
   const hasMoreSystem = systemShortcuts.length > MAX_VISIBLE_SHORTCUTS;
 
-  // For now, we'll use system shortcuts as favorites (we'll implement proper favorites later)
-  const favoriteShortcuts = systemShortcuts.slice(0, MAX_VISIBLE_SHORTCUTS);
-  const hasMoreFavorites = systemShortcuts.length > MAX_VISIBLE_SHORTCUTS;
+  const visibleFavoriteShortcuts = favoriteShortcuts.slice(0, MAX_VISIBLE_SHORTCUTS);
+  const hasMoreFavorites = favoriteShortcuts.length > MAX_VISIBLE_SHORTCUTS;
 
   // Reset selection when search query changes
   useEffect(() => {
@@ -167,6 +167,12 @@ const CommandPalette: React.FC = () => {
       if (selectedItem.index === shortcuts.length) {
         // Selected the See More button
         handleSeeMore(currentColumn === 'left' ? 'system' : 'favorites');
+      } else {
+        // Selected a shortcut - toggle favorite
+        const shortcut = shortcuts[selectedItem.index];
+        if (shortcut) {
+          toggleFavorite(shortcut.id);
+        }
       }
     }
   };
@@ -204,6 +210,10 @@ const CommandPalette: React.FC = () => {
     setExpandedView({ type: null });
     // Reset selection to first item in left column when returning to main view
     setSelectedItem({ column: 'left', index: 0 });
+  };
+
+  const handleToggleFavorite = async (shortcutId: string) => {
+    await toggleFavorite(shortcutId);
   };
 
   return (
@@ -287,23 +297,47 @@ const CommandPalette: React.FC = () => {
                           ? 'bg-gray-800/50' 
                           : ''
                       }`}
+                      onClick={() => handleToggleFavorite(shortcut.id)}
                     >
-                      {expandedView.type === 'system' && (
-                        <svg 
-                          className="w-5 h-5 mr-3" 
-                          viewBox="0 0 24 24" 
-                          fill="none" 
-                          stroke="currentColor"
+                      <div className="command-item-content">
+                        {shortcut.isGlobal && (
+                          <svg 
+                            className="w-5 h-5" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="currentColor"
+                          >
+                            <path 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round" 
+                              strokeWidth={1.5}
+                              d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" 
+                            />
+                          </svg>
+                        )}
+                        <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
+                        <button
+                          className={`favorite-button ${shortcut.isFavorite ? 'active' : ''}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleFavorite(shortcut.id);
+                          }}
                         >
-                          <path 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round" 
-                            strokeWidth={1.5}
-                            d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" 
-                          />
-                        </svg>
-                      )}
-                      <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill={shortcut.isFavorite ? "currentColor" : "none"}
+                            stroke="currentColor"
+                            strokeWidth="1"
+                            className={shortcut.isFavorite ? 'text-yellow-400' : 'text-gray-400'}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
+                            />
+                          </svg>
+                        </button>
+                      </div>
                       <KeyboardShortcut shortcut={shortcut.keys} />
                     </div>
                   ))}
@@ -320,23 +354,47 @@ const CommandPalette: React.FC = () => {
                           ? 'bg-gray-800/50' 
                           : ''
                       }`}
+                      onClick={() => handleToggleFavorite(shortcut.id)}
                     >
-                      {expandedView.type === 'system' && (
-                        <svg 
-                          className="w-5 h-5 mr-3" 
-                          viewBox="0 0 24 24" 
-                          fill="none" 
-                          stroke="currentColor"
+                      <div className="command-item-content">
+                        {shortcut.isGlobal && (
+                          <svg 
+                            className="w-5 h-5" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="currentColor"
+                          >
+                            <path 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round" 
+                              strokeWidth={1.5}
+                              d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" 
+                            />
+                          </svg>
+                        )}
+                        <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
+                        <button
+                          className={`favorite-button ${shortcut.isFavorite ? 'active' : ''}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleFavorite(shortcut.id);
+                          }}
                         >
-                          <path 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round" 
-                            strokeWidth={1.5}
-                            d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" 
-                          />
-                        </svg>
-                      )}
-                      <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill={shortcut.isFavorite ? "currentColor" : "none"}
+                            stroke="currentColor"
+                            strokeWidth="1"
+                            className={shortcut.isFavorite ? 'text-yellow-400' : 'text-gray-400'}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
+                            />
+                          </svg>
+                        </button>
+                      </div>
                       <KeyboardShortcut shortcut={shortcut.keys} />
                     </div>
                   ))}
@@ -357,21 +415,47 @@ const CommandPalette: React.FC = () => {
                         ? 'bg-gray-800/50' 
                         : ''
                     }`}
+                    onClick={() => handleToggleFavorite(shortcut.id)}
                   >
-                    <svg 
-                      className="w-5 h-5 mr-3" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor"
-                    >
-                      <path 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        strokeWidth={1.5}
-                        d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" 
-                      />
-                    </svg>
-                    <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
+                    <div className="command-item-content">
+                      {shortcut.isGlobal && (
+                        <svg 
+                          className="w-5 h-5" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="currentColor"
+                        >
+                          <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            strokeWidth={1.5}
+                            d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" 
+                          />
+                        </svg>
+                      )}
+                      <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
+                      <button
+                        className={`favorite-button ${shortcut.isFavorite ? 'active' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleFavorite(shortcut.id);
+                        }}
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill={shortcut.isFavorite ? "currentColor" : "none"}
+                          stroke="currentColor"
+                          strokeWidth="1"
+                          className={shortcut.isFavorite ? 'text-yellow-400' : 'text-gray-400'}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                     <KeyboardShortcut shortcut={shortcut.keys} />
                   </div>
                 ))}
@@ -402,8 +486,47 @@ const CommandPalette: React.FC = () => {
                         ? 'bg-gray-800/50' 
                         : ''
                     }`}
+                    onClick={() => handleToggleFavorite(shortcut.id)}
                   >
-                    <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
+                    <div className="command-item-content">
+                      {shortcut.isGlobal && (
+                        <svg 
+                          className="w-5 h-5" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="currentColor"
+                        >
+                          <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            strokeWidth={1.5}
+                            d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" 
+                          />
+                        </svg>
+                      )}
+                      <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
+                      <button
+                        className={`favorite-button ${shortcut.isFavorite ? 'active' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleFavorite(shortcut.id);
+                        }}
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill={shortcut.isFavorite ? "currentColor" : "none"}
+                          stroke="currentColor"
+                          strokeWidth="1"
+                          className={shortcut.isFavorite ? 'text-yellow-400' : 'text-gray-400'}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                     <KeyboardShortcut shortcut={shortcut.keys} />
                   </div>
                 ))}
@@ -436,7 +559,7 @@ const CommandPalette: React.FC = () => {
         </div>
         <div>
           <KeyboardShortcut shortcut="↵" />
-          <span>select</span>
+          <span>toggle favorite</span>
         </div>
         <div>
           <div className="keyboard-shortcut">
