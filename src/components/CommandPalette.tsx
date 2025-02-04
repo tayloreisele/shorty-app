@@ -3,13 +3,15 @@ import useShortcutStore from '../store/useShortcutStore';
 import KeyboardShortcut from './KeyboardShortcut';
 import HighlightedText from './HighlightedText';
 import ShortcutCreator from './ShortcutCreator';
+import StarButton from './StarButton';
 import '../styles/CommandPalette.css';
 
 const MAX_VISIBLE_SHORTCUTS = 10;
 
 type ExpandedView = {
-  type: 'system' | 'favorites' | null;
-};
+  type: 'system' | 'favorites' | 'app';
+  appId?: string;
+} | null;
 
 type Selection = {
   column: 'left' | 'right' | 'back';
@@ -20,12 +22,14 @@ const CommandPalette: React.FC = () => {
   console.log('CommandPalette rendering...');
   
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedView, setExpandedView] = useState<ExpandedView>({ type: null });
+  const [expandedView, setExpandedView] = useState<ExpandedView>(null);
   const [selectedItem, setSelectedItem] = useState<Selection>({ column: 'left', index: 0 });
   const [isShortcutCreatorOpen, setIsShortcutCreatorOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const store = useShortcutStore();
   const toggleFavorite = useShortcutStore(state => state.toggleFavorite);
+  const getAllAppsWithShortcuts = useShortcutStore(state => state.getAllAppsWithShortcuts);
+  const getShortcutsByApp = useShortcutStore(state => state.getShortcutsByApp);
   console.log('Full store state:', store);
   
   // Focus search input when window becomes visible
@@ -57,17 +61,27 @@ const CommandPalette: React.FC = () => {
     );
   };
   
-  // Split shortcuts into system and favorites
-  const allShortcuts = Object.values(store.shortcuts || {});
-  const systemShortcuts = filterShortcuts(allShortcuts.filter(s => s.isGlobal));
-  const favoriteShortcuts = filterShortcuts(allShortcuts.filter(s => s.isFavorite));
+  // Get all apps with their shortcuts
+  const appsWithShortcuts = getAllAppsWithShortcuts();
+  
+  // Filter apps based on search query
+  const filteredApps = searchQuery.trim()
+    ? appsWithShortcuts.filter(({ app, shortcuts }) => {
+        const query = searchQuery.toLowerCase().trim();
+        return app.name.toLowerCase().includes(query) ||
+               shortcuts.some(s => 
+                 s.name.toLowerCase().includes(query) || 
+                 s.keys.toLowerCase().includes(query)
+               );
+      })
+    : appsWithShortcuts;
 
   // Get visible shortcuts for each section
-  const visibleSystemShortcuts = systemShortcuts.slice(0, MAX_VISIBLE_SHORTCUTS);
-  const hasMoreSystem = systemShortcuts.length > MAX_VISIBLE_SHORTCUTS;
+  const visibleSystemShortcuts = filterShortcuts(Object.values(store.shortcuts || {}).filter(s => s.isGlobal));
+  const hasMoreSystem = visibleSystemShortcuts.length > MAX_VISIBLE_SHORTCUTS;
 
-  const visibleFavoriteShortcuts = favoriteShortcuts.slice(0, MAX_VISIBLE_SHORTCUTS);
-  const hasMoreFavorites = favoriteShortcuts.length > MAX_VISIBLE_SHORTCUTS;
+  const visibleFavoriteShortcuts = filterShortcuts(Object.values(store.shortcuts || {}).filter(s => s.isFavorite));
+  const hasMoreFavorites = visibleFavoriteShortcuts.length > MAX_VISIBLE_SHORTCUTS;
 
   // Reset selection when search query changes
   useEffect(() => {
@@ -76,9 +90,9 @@ const CommandPalette: React.FC = () => {
 
   // Handle keyboard navigation for expanded view
   const handleExpandedKeyDown = (e: KeyboardEvent) => {
-    if (!expandedView.type) return;
+    if (!expandedView?.type) return;
 
-    const shortcuts = expandedView.type === 'system' ? systemShortcuts : favoriteShortcuts;
+    const shortcuts = expandedView.type === 'system' ? visibleSystemShortcuts : visibleFavoriteShortcuts;
     const midPoint = Math.ceil(shortcuts.length / 2);
     const leftColumnShortcuts = shortcuts.slice(0, midPoint);
     const rightColumnShortcuts = shortcuts.slice(midPoint);
@@ -133,7 +147,7 @@ const CommandPalette: React.FC = () => {
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
       const currentColumn = selectedItem.column;
-      const shortcuts = currentColumn === 'left' ? visibleSystemShortcuts : favoriteShortcuts;
+      const shortcuts = currentColumn === 'left' ? visibleSystemShortcuts : visibleFavoriteShortcuts;
       const hasMore = currentColumn === 'left' ? hasMoreSystem : hasMoreFavorites;
       
       // Include the "See More" button in navigation when it exists
@@ -150,7 +164,7 @@ const CommandPalette: React.FC = () => {
     } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
       e.preventDefault();
       const newColumn = selectedItem.column === 'left' ? 'right' : 'left';
-      const shortcuts = newColumn === 'left' ? visibleSystemShortcuts : favoriteShortcuts;
+      const shortcuts = newColumn === 'left' ? visibleSystemShortcuts : visibleFavoriteShortcuts;
       const hasMore = newColumn === 'left' ? hasMoreSystem : hasMoreFavorites;
       
       // Include the "See More" button in navigation when it exists
@@ -163,7 +177,7 @@ const CommandPalette: React.FC = () => {
     } else if (e.key === 'Enter') {
       e.preventDefault();
       const currentColumn = selectedItem.column;
-      const shortcuts = currentColumn === 'left' ? visibleSystemShortcuts : favoriteShortcuts;
+      const shortcuts = currentColumn === 'left' ? visibleSystemShortcuts : visibleFavoriteShortcuts;
       
       if (selectedItem.index === shortcuts.length) {
         // Selected the See More button
@@ -180,7 +194,7 @@ const CommandPalette: React.FC = () => {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (expandedView.type) {
+      if (expandedView?.type) {
         handleExpandedKeyDown(e);
       } else {
         handleMainViewKeyDown(e);
@@ -189,7 +203,7 @@ const CommandPalette: React.FC = () => {
     
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [selectedItem, expandedView, systemShortcuts, favoriteShortcuts, visibleSystemShortcuts]);
+  }, [selectedItem, expandedView, visibleSystemShortcuts, visibleFavoriteShortcuts]);
 
   useEffect(() => {
     console.log('CommandPalette mounted');
@@ -198,23 +212,53 @@ const CommandPalette: React.FC = () => {
     return () => console.log('CommandPalette unmounted');
   }, []);
 
-  console.log('Shortcuts to render:', allShortcuts);
+  console.log('Shortcuts to render:', store.shortcuts);
 
-  const applications = useShortcutStore(state => state.applications);
-
-  const handleSeeMore = (type: 'system' | 'favorites') => {
-    setExpandedView({ type });
+  const handleSeeMore = (type: 'system' | 'favorites' | 'app', appId?: string) => {
+    setExpandedView({ type, appId });
     setSelectedItem({ column: 'left', index: 0 });
   };
 
   const handleBack = () => {
-    setExpandedView({ type: null });
+    setExpandedView(null);
     // Reset selection to first item in left column when returning to main view
     setSelectedItem({ column: 'left', index: 0 });
   };
 
   const handleToggleFavorite = async (shortcutId: string) => {
     await toggleFavorite(shortcutId);
+  };
+
+  // Get the shortcuts for the current expanded view
+  const getExpandedViewShortcuts = () => {
+    if (!expandedView) return [];
+    
+    switch (expandedView.type) {
+      case 'system':
+        return filterShortcuts(Object.values(store.shortcuts || {}).filter(s => s.isGlobal));
+      case 'favorites':
+        return filterShortcuts(Object.values(store.shortcuts || {}).filter(s => s.isFavorite));
+      case 'app':
+        return expandedView.appId ? filterShortcuts(getShortcutsByApp(expandedView.appId)) : [];
+      default:
+        return [];
+    }
+  };
+
+  // Get the title for the current expanded view
+  const getExpandedViewTitle = () => {
+    if (!expandedView) return '';
+    
+    switch (expandedView.type) {
+      case 'system':
+        return 'System Shortcuts';
+      case 'favorites':
+        return 'Favorite Shortcuts';
+      case 'app':
+        return expandedView.appId ? store.applications[expandedView.appId]?.name : '';
+      default:
+        return '';
+    }
   };
 
   return (
@@ -251,7 +295,7 @@ const CommandPalette: React.FC = () => {
         </div>
 
         <div className="scrollable-content">
-          {expandedView.type ? (
+          {expandedView ? (
             <>
               <div className="expanded-header">
                 <button 
@@ -261,14 +305,14 @@ const CommandPalette: React.FC = () => {
                   ← Back
                 </button>
                 <span className="expanded-title">
-                  {expandedView.type === 'system' ? 'System Shortcuts' : 'Favorite Shortcuts'}
+                  {getExpandedViewTitle()}
                 </span>
               </div>
               <div className="columns-container">
                 {/* Left Column */}
                 <div className="column">
-                  {(expandedView.type === 'system' ? systemShortcuts : favoriteShortcuts)
-                    .slice(0, Math.ceil((expandedView.type === 'system' ? systemShortcuts : favoriteShortcuts).length / 2))
+                  {getExpandedViewShortcuts()
+                    .slice(0, Math.ceil(getExpandedViewShortcuts().length / 2))
                     .map((shortcut, index) => (
                       <div 
                         key={shortcut.id} 
@@ -297,26 +341,10 @@ const CommandPalette: React.FC = () => {
                           )}
                           <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
                           <KeyboardShortcut shortcut={shortcut.keys} />
-                          <button
-                            className={`favorite-button ${shortcut.isFavorite ? 'active' : ''}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleToggleFavorite(shortcut.id);
-                            }}
-                          >
-                            <svg
-                              viewBox="0 0 24 24"
-                              width="16"
-                              height="16"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              fill={shortcut.isFavorite ? 'currentColor' : 'none'}
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                            </svg>
-                          </button>
+                          <StarButton
+                            isFavorite={shortcut.isFavorite}
+                            onClick={() => handleToggleFavorite(shortcut.id)}
+                          />
                         </div>
                       </div>
                     ))}
@@ -324,8 +352,8 @@ const CommandPalette: React.FC = () => {
 
                 {/* Right Column */}
                 <div className="column">
-                  {(expandedView.type === 'system' ? systemShortcuts : favoriteShortcuts)
-                    .slice(Math.ceil((expandedView.type === 'system' ? systemShortcuts : favoriteShortcuts).length / 2))
+                  {getExpandedViewShortcuts()
+                    .slice(Math.ceil(getExpandedViewShortcuts().length / 2))
                     .map((shortcut, index) => (
                       <div 
                         key={shortcut.id} 
@@ -354,26 +382,10 @@ const CommandPalette: React.FC = () => {
                           )}
                           <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
                           <KeyboardShortcut shortcut={shortcut.keys} />
-                          <button
-                            className={`favorite-button ${shortcut.isFavorite ? 'active' : ''}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleToggleFavorite(shortcut.id);
-                            }}
-                          >
-                            <svg
-                              viewBox="0 0 24 24"
-                              width="16"
-                              height="16"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              fill={shortcut.isFavorite ? 'currentColor' : 'none'}
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                            </svg>
-                          </button>
+                          <StarButton
+                            isFavorite={shortcut.isFavorite}
+                            onClick={() => handleToggleFavorite(shortcut.id)}
+                          />
                         </div>
                       </div>
                     ))}
@@ -416,26 +428,10 @@ const CommandPalette: React.FC = () => {
                           )}
                           <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
                           <KeyboardShortcut shortcut={shortcut.keys} />
-                          <button
-                            className={`favorite-button ${shortcut.isFavorite ? 'active' : ''}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleToggleFavorite(shortcut.id);
-                            }}
-                          >
-                            <svg
-                              viewBox="0 0 24 24"
-                              width="16"
-                              height="16"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              fill={shortcut.isFavorite ? 'currentColor' : 'none'}
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                            </svg>
-                          </button>
+                          <StarButton
+                            isFavorite={shortcut.isFavorite}
+                            onClick={() => handleToggleFavorite(shortcut.id)}
+                          />
                         </div>
                       </div>
                     ))}
@@ -490,26 +486,10 @@ const CommandPalette: React.FC = () => {
                               )}
                               <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
                               <KeyboardShortcut shortcut={shortcut.keys} />
-                              <button
-                                className={`favorite-button ${shortcut.isFavorite ? 'active' : ''}`}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleToggleFavorite(shortcut.id);
-                                }}
-                              >
-                                <svg
-                                  viewBox="0 0 24 24"
-                                  width="16"
-                                  height="16"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  fill={shortcut.isFavorite ? 'currentColor' : 'none'}
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                >
-                                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                                </svg>
-                              </button>
+                              <StarButton
+                                isFavorite={shortcut.isFavorite}
+                                onClick={() => handleToggleFavorite(shortcut.id)}
+                              />
                             </div>
                           </div>
                         ))}
@@ -552,28 +532,42 @@ const CommandPalette: React.FC = () => {
                 </div>
               </div>
 
-              {/* Test Sections */}
-              {[1, 2, 3, 4].map((num) => (
-                <div key={num} className="columns-container">
-                  <div className="column">
-                    <h2 className="column-title">Test Section {num}</h2>
+              {/* Apps Section */}
+              <div className="apps-section">
+                {filteredApps.map(({ app, shortcuts, hasMore }) => (
+                  <div key={app.id} className="app-shortcuts">
+                    <h2 className="column-title">{app.name}</h2>
                     <div className="command-list">
-                      {visibleSystemShortcuts.map((shortcut, index) => (
+                      {shortcuts.map((shortcut, index) => (
                         <div 
-                          key={`${shortcut.id}-${num}`}
+                          key={shortcut.id} 
                           className="command-item"
                           onClick={() => handleToggleFavorite(shortcut.id)}
                         >
                           <div className="command-item-content">
                             <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
                             <KeyboardShortcut shortcut={shortcut.keys} />
+                            <StarButton
+                              isFavorite={shortcut.isFavorite}
+                              onClick={() => handleToggleFavorite(shortcut.id)}
+                            />
                           </div>
                         </div>
                       ))}
+                      {hasMore && (
+                        <div 
+                          className="command-item"
+                          onClick={() => handleSeeMore('app', app.id)}
+                        >
+                          <div className="command-item-content">
+                            <span>See More →</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </>
           )}
         </div>

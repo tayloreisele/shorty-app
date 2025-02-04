@@ -1,10 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-
-interface App {
-  id: string;
-  name: string;
-  icon?: string;
-}
+import useShortcutStore from '../store/useShortcutStore';
+import type { Application } from '../types/shortcuts';
 
 interface ShortcutCreatorProps {
   onClose: () => void;
@@ -18,14 +14,70 @@ const ShortcutCreator: React.FC<ShortcutCreatorProps> = ({ onClose, isOpen }) =>
   const [showDetails, setShowDetails] = useState(false);
   const [shortcutName, setShortcutName] = useState('');
   const [shortcutDescription, setShortcutDescription] = useState('');
-  const [selectedApp, setSelectedApp] = useState<App | null>(null);
+  const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [isAddingApp, setIsAddingApp] = useState(false);
   const [newAppName, setNewAppName] = useState('');
-  const [apps, setApps] = useState<App[]>([
-    { id: '1', name: 'Chrome' },
-    { id: '2', name: 'VS Code' },
-    { id: '3', name: 'Finder' },
-  ]);
+  const [error, setError] = useState<string | null>(null);
+
+  // Get store actions and data
+  const applications = useShortcutStore(state => state.applications);
+  const addShortcut = useShortcutStore(state => state.addShortcut);
+  const addApplication = useShortcutStore(state => state.addApplication);
+
+  // Reset error when inputs change
+  useEffect(() => {
+    setError(null);
+  }, [shortcutName, shortcutKeys, selectedApp, newAppName]);
+
+  const handleSave = async () => {
+    // Validate inputs
+    if (!shortcutName.trim()) {
+      setError('Please enter a shortcut name');
+      return;
+    }
+    if (shortcutKeys.length === 0) {
+      setError('Please enter a keyboard shortcut');
+      return;
+    }
+    if (!selectedApp && !newAppName.trim()) {
+      setError('Please select or add an app');
+      return;
+    }
+
+    try {
+      // If adding a new app, create it first
+      let appId = selectedApp?.id;
+      if (!appId && newAppName.trim()) {
+        const result = await addApplication({
+          name: newAppName.trim()
+        });
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+        appId = result.data!.id;
+      }
+
+      // Create the shortcut
+      const result = await addShortcut({
+        name: shortcutName.trim(),
+        keys: shortcutKeys.join(''),
+        description: shortcutDescription.trim() || undefined,
+        application: appId!,
+        isGlobal: false,
+        isFavorite: false
+      });
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      // Clear form and close
+      clearShortcut();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save shortcut');
+    }
+  };
 
   const clearShortcut = () => {
     setShortcutKeys([]);
@@ -102,16 +154,23 @@ const ShortcutCreator: React.FC<ShortcutCreatorProps> = ({ onClose, isOpen }) =>
     }
   }, [isOpen]);
 
-  const handleAddApp = () => {
+  const handleAddApp = async () => {
     if (newAppName.trim()) {
-      const newApp = {
-        id: Date.now().toString(),
-        name: newAppName.trim()
-      };
-      setApps(prev => [...prev, newApp]);
-      setSelectedApp(newApp);
-      setIsAddingApp(false);
-      setNewAppName('');
+      try {
+        const result = await addApplication({
+          name: newAppName.trim()
+        });
+        
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
+        setSelectedApp(result.data!);
+        setIsAddingApp(false);
+        setNewAppName('');
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to add app');
+      }
     }
   };
 
@@ -144,6 +203,12 @@ const ShortcutCreator: React.FC<ShortcutCreatorProps> = ({ onClose, isOpen }) =>
         <p className="shortcut-creator-instruction">
           Create a shortcut by selecting modifiers and pressing any key
         </p>
+
+        {error && (
+          <div className="error-message">
+            {error}
+          </div>
+        )}
 
         <div className={`shortcut-input-container ${showDetails ? 'dimmed' : ''}`}>
           <div className={`modifier-buttons ${showModifierPulse ? 'pulse' : ''}`}>
@@ -231,13 +296,13 @@ const ShortcutCreator: React.FC<ShortcutCreatorProps> = ({ onClose, isOpen }) =>
                       if (e.target.value === 'add') {
                         setIsAddingApp(true);
                       } else {
-                        setSelectedApp(apps.find(app => app.id === e.target.value) || null);
+                        setSelectedApp(Object.values(applications).find(app => app.id === e.target.value) || null);
                       }
                     }}
                   >
                     <option value="">Select an app...</option>
                     <option value="add">+ Add new app</option>
-                    {apps.map(app => (
+                    {Object.values(applications).map(app => (
                       <option key={app.id} value={app.id}>{app.name}</option>
                     ))}
                   </select>
@@ -262,7 +327,6 @@ const ShortcutCreator: React.FC<ShortcutCreatorProps> = ({ onClose, isOpen }) =>
                     <button 
                       className="app-action-button confirm"
                       onClick={handleAddApp}
-                      disabled={!newAppName.trim()}
                     >
                       Add
                     </button>
@@ -271,12 +335,15 @@ const ShortcutCreator: React.FC<ShortcutCreatorProps> = ({ onClose, isOpen }) =>
               )}
             </div>
 
-            <button 
-              className="save-button"
-              disabled={!shortcutName.trim() || !selectedApp}
-            >
-              Save Shortcut
-            </button>
+            <div className="shortcut-actions">
+              <button 
+                className="save-button"
+                onClick={handleSave}
+                disabled={!shortcutName || shortcutKeys.length === 0 || (!selectedApp && !newAppName)}
+              >
+                Save Shortcut
+              </button>
+            </div>
           </div>
         )}
       </div>
