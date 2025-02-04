@@ -534,39 +534,85 @@ const CommandPalette: React.FC = () => {
 
               {/* Apps Section */}
               <div className="apps-section">
-                {filteredApps.map(({ app, shortcuts, hasMore }) => (
-                  <div key={app.id} className="app-shortcuts">
-                    <h2 className="column-title">{app.name}</h2>
-                    <div className="command-list">
-                      {shortcuts.map((shortcut, index) => (
-                        <div 
-                          key={shortcut.id} 
-                          className="command-item"
-                          onClick={() => handleToggleFavorite(shortcut.id)}
-                        >
-                          <div className="command-item-content">
-                            <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
-                            <KeyboardShortcut shortcut={shortcut.keys} />
-                            <StarButton
-                              isFavorite={shortcut.isFavorite}
-                              onClick={() => handleToggleFavorite(shortcut.id)}
-                            />
+                <div className="columns-container">
+                  {/* Left Column */}
+                  <div className="column">
+                    {filteredApps
+                      .filter((_, index) => index % 2 === 0)
+                      .map(({ app, shortcuts, hasMore }) => (
+                        <div key={app.id} className="app-shortcuts">
+                          <h2 className="column-title">{app.name}</h2>
+                          <div className="command-list">
+                            {shortcuts.map((shortcut, index) => (
+                              <div 
+                                key={shortcut.id} 
+                                className="command-item"
+                                onClick={() => handleToggleFavorite(shortcut.id)}
+                              >
+                                <div className="command-item-content">
+                                  <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
+                                  <KeyboardShortcut shortcut={shortcut.keys} />
+                                  <StarButton
+                                    isFavorite={shortcut.isFavorite}
+                                    onClick={() => handleToggleFavorite(shortcut.id)}
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                            {hasMore && (
+                              <div 
+                                className="command-item"
+                                onClick={() => handleSeeMore('app', app.id)}
+                              >
+                                <div className="command-item-content">
+                                  <span>See More →</span>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
-                      ))}
-                      {hasMore && (
-                        <div 
-                          className="command-item"
-                          onClick={() => handleSeeMore('app', app.id)}
-                        >
-                          <div className="command-item-content">
-                            <span>See More →</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    ))}
                   </div>
-                ))}
+
+                  {/* Right Column */}
+                  <div className="column">
+                    {filteredApps
+                      .filter((_, index) => index % 2 === 1)
+                      .map(({ app, shortcuts, hasMore }) => (
+                        <div key={app.id} className="app-shortcuts">
+                          <h2 className="column-title">{app.name}</h2>
+                          <div className="command-list">
+                            {shortcuts.map((shortcut, index) => (
+                              <div 
+                                key={shortcut.id} 
+                                className="command-item"
+                                onClick={() => handleToggleFavorite(shortcut.id)}
+                              >
+                                <div className="command-item-content">
+                                  <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
+                                  <KeyboardShortcut shortcut={shortcut.keys} />
+                                  <StarButton
+                                    isFavorite={shortcut.isFavorite}
+                                    onClick={() => handleToggleFavorite(shortcut.id)}
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                            {hasMore && (
+                              <div 
+                                className="command-item"
+                                onClick={() => handleSeeMore('app', app.id)}
+                              >
+                                <div className="command-item-content">
+                                  <span>See More →</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </>
           )}

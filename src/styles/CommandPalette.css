@@ -800,6 +800,11 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  margin-bottom: 28px;
+}
+
+.app-shortcuts:last-child {
+  margin-bottom: 0;
 }
 
 .app-shortcuts .command-list {
