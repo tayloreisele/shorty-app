@@ -5,9 +5,10 @@ import type { Application } from '../types/shortcuts';
 interface ShortcutCreatorProps {
   onClose: () => void;
   isOpen: boolean;
+  editingShortcutId?: string | null;
 }
 
-const ShortcutCreator: React.FC<ShortcutCreatorProps> = ({ onClose, isOpen }) => {
+const ShortcutCreator: React.FC<ShortcutCreatorProps> = ({ onClose, isOpen, editingShortcutId }) => {
   const [shortcutKeys, setShortcutKeys] = useState<string[]>([]);
   const [isListening, setIsListening] = useState(false);
   const [showModifierPulse, setShowModifierPulse] = useState(true);
@@ -18,16 +19,39 @@ const ShortcutCreator: React.FC<ShortcutCreatorProps> = ({ onClose, isOpen }) =>
   const [isAddingApp, setIsAddingApp] = useState(false);
   const [newAppName, setNewAppName] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isSystemShortcut, setIsSystemShortcut] = useState(false);
 
   // Get store actions and data
   const applications = useShortcutStore(state => state.applications);
   const addShortcut = useShortcutStore(state => state.addShortcut);
   const addApplication = useShortcutStore(state => state.addApplication);
+  const shortcuts = useShortcutStore(state => state.shortcuts);
+  const updateShortcut = useShortcutStore(state => state.updateShortcut);
 
   // Reset error when inputs change
   useEffect(() => {
     setError(null);
   }, [shortcutName, shortcutKeys, selectedApp, newAppName]);
+
+  // Load shortcut data when editing
+  useEffect(() => {
+    if (editingShortcutId && shortcuts[editingShortcutId]) {
+      const shortcut = shortcuts[editingShortcutId];
+      setShortcutKeys(shortcut.keys.split(''));
+      setShortcutName(shortcut.name);
+      setShortcutDescription(shortcut.description || '');
+      setIsSystemShortcut(shortcut.isGlobal);
+      setSelectedApp(shortcut.isGlobal ? null : applications[shortcut.application] || null);
+      setShowDetails(true);
+    }
+  }, [editingShortcutId, shortcuts]);
+
+  // Clear form when closing
+  useEffect(() => {
+    if (!isOpen) {
+      clearShortcut();
+    }
+  }, [isOpen]);
 
   const handleSave = async () => {
     // Validate inputs
@@ -39,7 +63,7 @@ const ShortcutCreator: React.FC<ShortcutCreatorProps> = ({ onClose, isOpen }) =>
       setError('Please enter a keyboard shortcut');
       return;
     }
-    if (!selectedApp && !newAppName.trim()) {
+    if (!isSystemShortcut && !selectedApp && !newAppName.trim()) {
       setError('Please select or add an app');
       return;
     }
@@ -47,7 +71,7 @@ const ShortcutCreator: React.FC<ShortcutCreatorProps> = ({ onClose, isOpen }) =>
     try {
       // If adding a new app, create it first
       let appId = selectedApp?.id;
-      if (!appId && newAppName.trim()) {
+      if (!isSystemShortcut && !appId && newAppName.trim()) {
         const result = await addApplication({
           name: newAppName.trim()
         });
@@ -57,18 +81,33 @@ const ShortcutCreator: React.FC<ShortcutCreatorProps> = ({ onClose, isOpen }) =>
         appId = result.data!.id;
       }
 
-      // Create the shortcut
-      const result = await addShortcut({
-        name: shortcutName.trim(),
-        keys: shortcutKeys.join(''),
-        description: shortcutDescription.trim() || undefined,
-        application: appId!,
-        isGlobal: false,
-        isFavorite: false
-      });
+      if (editingShortcutId) {
+        // Update existing shortcut
+        const result = await updateShortcut(editingShortcutId, {
+          name: shortcutName.trim(),
+          keys: shortcutKeys.join(''),
+          description: shortcutDescription.trim() || undefined,
+          application: isSystemShortcut ? 'macos' : appId!,
+          isGlobal: isSystemShortcut,
+        });
 
-      if (!result.success) {
-        throw new Error(result.error);
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+      } else {
+        // Create new shortcut
+        const result = await addShortcut({
+          name: shortcutName.trim(),
+          keys: shortcutKeys.join(''),
+          description: shortcutDescription.trim() || undefined,
+          application: isSystemShortcut ? 'macos' : appId!,
+          isGlobal: isSystemShortcut,
+          isFavorite: false
+        });
+
+        if (!result.success) {
+          throw new Error(result.error);
+        }
       }
 
       // Clear form and close
@@ -89,6 +128,7 @@ const ShortcutCreator: React.FC<ShortcutCreatorProps> = ({ onClose, isOpen }) =>
     setSelectedApp(null);
     setIsAddingApp(false);
     setNewAppName('');
+    setIsSystemShortcut(false);
   };
 
   const handleBack = () => {
@@ -291,19 +331,28 @@ const ShortcutCreator: React.FC<ShortcutCreatorProps> = ({ onClose, isOpen }) =>
                 <div className="dropdown-container">
                   <select
                     className="details-input app-dropdown"
-                    value={selectedApp?.id || ''}
+                    value={isSystemShortcut ? 'system' : selectedApp?.id || ''}
                     onChange={(e) => {
-                      if (e.target.value === 'add') {
+                      const value = e.target.value;
+                      if (value === 'system') {
+                        setIsSystemShortcut(true);
+                        setSelectedApp(null);
+                      } else if (value === 'add') {
                         setIsAddingApp(true);
+                        setIsSystemShortcut(false);
                       } else {
-                        setSelectedApp(Object.values(applications).find(app => app.id === e.target.value) || null);
+                        setIsSystemShortcut(false);
+                        setSelectedApp(Object.values(applications).find(app => app.id === value) || null);
                       }
                     }}
                   >
                     <option value="">Select an app...</option>
-                    <option value="add">+ Add new app</option>
-                    {Object.values(applications).map(app => (
-                      <option key={app.id} value={app.id}>{app.name}</option>
+                    <option value="add" className="add-new-app-option">✨ Add new app</option>
+                    <option value="system">macOS Shortcuts</option>
+                    {Object.values(applications)
+                      .filter(app => app.id !== 'macos') // Exclude the macOS app if it exists
+                      .map(app => (
+                        <option key={app.id} value={app.id}>{app.name}</option>
                     ))}
                   </select>
                 </div>

@@ -9,14 +9,6 @@ const createShortcut = (shortcut: Omit<Shortcut, 'isFavorite' | 'createdAt' | 'u
   updatedAt: now,
 });
 
-const macOS: Application = {
-  id: 'macos',
-  name: 'macOS',
-  createdAt: now,
-  updatedAt: now,
-  icon: '🍎', // We can replace with actual icon path later
-};
-
 const defaultShortcuts: Record<string, Shortcut> = {
   'macos-copy': createShortcut({
     id: 'macos-copy',
@@ -156,8 +148,6 @@ const defaultShortcuts: Record<string, Shortcut> = {
 };
 
 export const initialStore: ShortcutStore = {
-  applications: {
-    macos: macOS,
-  },
+  applications: {},
   shortcuts: defaultShortcuts,
 }; 

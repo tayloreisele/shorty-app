@@ -3,7 +3,7 @@ import useShortcutStore from '../store/useShortcutStore';
 import KeyboardShortcut from './KeyboardShortcut';
 import HighlightedText from './HighlightedText';
 import ShortcutCreator from './ShortcutCreator';
-import StarButton from './StarButton';
+import ActionMenu from './ActionMenu';
 import '../styles/CommandPalette.css';
 
 const MAX_VISIBLE_SHORTCUTS = 10;
@@ -30,6 +30,8 @@ const CommandPalette: React.FC = () => {
   const toggleFavorite = useShortcutStore(state => state.toggleFavorite);
   const getAllAppsWithShortcuts = useShortcutStore(state => state.getAllAppsWithShortcuts);
   const getShortcutsByApp = useShortcutStore(state => state.getShortcutsByApp);
+  const [editingShortcut, setEditingShortcut] = useState<string | null>(null);
+  const removeShortcut = useShortcutStore(state => state.removeShortcut);
   console.log('Full store state:', store);
   
   // Focus search input when window becomes visible
@@ -251,7 +253,7 @@ const CommandPalette: React.FC = () => {
     
     switch (expandedView.type) {
       case 'system':
-        return 'System Shortcuts';
+        return 'macOS Shortcuts';
       case 'favorites':
         return 'Favorite Shortcuts';
       case 'app':
@@ -259,6 +261,23 @@ const CommandPalette: React.FC = () => {
       default:
         return '';
     }
+  };
+
+  const handleEdit = (shortcutId: string) => {
+    setEditingShortcut(shortcutId);
+    setIsShortcutCreatorOpen(true);
+  };
+
+  const handleDelete = async (shortcutId: string) => {
+    if (window.confirm('Are you sure you want to delete this shortcut?')) {
+      await removeShortcut(shortcutId);
+    }
+  };
+
+  // Update ShortcutCreator to handle edit mode
+  const handleShortcutCreatorClose = () => {
+    setIsShortcutCreatorOpen(false);
+    setEditingShortcut(null);
   };
 
   return (
@@ -341,9 +360,11 @@ const CommandPalette: React.FC = () => {
                           )}
                           <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
                           <KeyboardShortcut shortcut={shortcut.keys} />
-                          <StarButton
+                          <ActionMenu
                             isFavorite={shortcut.isFavorite}
-                            onClick={() => handleToggleFavorite(shortcut.id)}
+                            onFavorite={() => handleToggleFavorite(shortcut.id)}
+                            onEdit={() => handleEdit(shortcut.id)}
+                            onDelete={() => handleDelete(shortcut.id)}
                           />
                         </div>
                       </div>
@@ -382,9 +403,11 @@ const CommandPalette: React.FC = () => {
                           )}
                           <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
                           <KeyboardShortcut shortcut={shortcut.keys} />
-                          <StarButton
+                          <ActionMenu
                             isFavorite={shortcut.isFavorite}
-                            onClick={() => handleToggleFavorite(shortcut.id)}
+                            onFavorite={() => handleToggleFavorite(shortcut.id)}
+                            onEdit={() => handleEdit(shortcut.id)}
+                            onDelete={() => handleDelete(shortcut.id)}
                           />
                         </div>
                       </div>
@@ -398,7 +421,7 @@ const CommandPalette: React.FC = () => {
               <div className="columns-container">
                 {/* System Column */}
                 <div className="column">
-                  <h2 className="column-title">System Shortcuts</h2>
+                  <h2 className="column-title">macOS Shortcuts</h2>
                   <div className="command-list">
                     {visibleSystemShortcuts.map((shortcut, index) => (
                       <div 
@@ -428,9 +451,11 @@ const CommandPalette: React.FC = () => {
                           )}
                           <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
                           <KeyboardShortcut shortcut={shortcut.keys} />
-                          <StarButton
+                          <ActionMenu
                             isFavorite={shortcut.isFavorite}
-                            onClick={() => handleToggleFavorite(shortcut.id)}
+                            onFavorite={() => handleToggleFavorite(shortcut.id)}
+                            onEdit={() => handleEdit(shortcut.id)}
+                            onDelete={() => handleDelete(shortcut.id)}
                           />
                         </div>
                       </div>
@@ -486,9 +511,11 @@ const CommandPalette: React.FC = () => {
                               )}
                               <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
                               <KeyboardShortcut shortcut={shortcut.keys} />
-                              <StarButton
+                              <ActionMenu
                                 isFavorite={shortcut.isFavorite}
-                                onClick={() => handleToggleFavorite(shortcut.id)}
+                                onFavorite={() => handleToggleFavorite(shortcut.id)}
+                                onEdit={() => handleEdit(shortcut.id)}
+                                onDelete={() => handleDelete(shortcut.id)}
                               />
                             </div>
                           </div>
@@ -552,9 +579,11 @@ const CommandPalette: React.FC = () => {
                                 <div className="command-item-content">
                                   <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
                                   <KeyboardShortcut shortcut={shortcut.keys} />
-                                  <StarButton
+                                  <ActionMenu
                                     isFavorite={shortcut.isFavorite}
-                                    onClick={() => handleToggleFavorite(shortcut.id)}
+                                    onFavorite={() => handleToggleFavorite(shortcut.id)}
+                                    onEdit={() => handleEdit(shortcut.id)}
+                                    onDelete={() => handleDelete(shortcut.id)}
                                   />
                                 </div>
                               </div>
@@ -591,9 +620,11 @@ const CommandPalette: React.FC = () => {
                                 <div className="command-item-content">
                                   <HighlightedText text={shortcut.name} highlight={searchQuery.trim()} />
                                   <KeyboardShortcut shortcut={shortcut.keys} />
-                                  <StarButton
+                                  <ActionMenu
                                     isFavorite={shortcut.isFavorite}
-                                    onClick={() => handleToggleFavorite(shortcut.id)}
+                                    onFavorite={() => handleToggleFavorite(shortcut.id)}
+                                    onEdit={() => handleEdit(shortcut.id)}
+                                    onDelete={() => handleDelete(shortcut.id)}
                                   />
                                 </div>
                               </div>
@@ -643,7 +674,8 @@ const CommandPalette: React.FC = () => {
 
         <ShortcutCreator
           isOpen={isShortcutCreatorOpen}
-          onClose={() => setIsShortcutCreatorOpen(false)}
+          onClose={handleShortcutCreatorClose}
+          editingShortcutId={editingShortcut}
         />
       </div>
     </div>

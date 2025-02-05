@@ -120,6 +120,7 @@
   flex: 1;
   min-width: 0;
   min-height: 24px;
+  position: relative;
 }
 
 .command-item:hover {
@@ -238,6 +239,7 @@
   gap: 2px;
   flex-shrink: 0;
   margin-left: auto;
+  margin-right: 2px;
 }
 
 .key {
@@ -824,4 +826,107 @@
 
 .app-shortcuts .command-item.bg-gray-800\/50 {
   background: rgba(255, 255, 255, 0.12);
+}
+
+/* Action Menu */
+.action-menu-container {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.action-menu-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-radius: 4px;
+  opacity: 0;
+}
+
+.command-item:hover .action-menu-button {
+  opacity: 1;
+}
+
+.action-menu-button:hover {
+  color: rgba(255, 255, 255, 1);
+}
+
+.action-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 4px;
+  background: rgba(18, 18, 18, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 0.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 4px;
+  min-width: 140px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+}
+
+.action-menu-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 6px 8px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.action-menu-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.action-menu-item.delete {
+  color: rgba(255, 99, 99, 0.9);
+}
+
+.action-menu-item.delete:hover {
+  background: rgba(255, 99, 99, 0.1);
+}
+
+.action-menu-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  font-size: 12px;
+}
+
+/* Add new app option styling */
+.app-dropdown option[value="add"] {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+
+/* Custom styling for the add new app option */
+.add-new-app-option {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 8px;
+}
+
+.add-new-app-option::before {
+  content: '✨';
+  margin-right: 8px;
+  font-size: 14px;
 }

@@ -123,10 +123,33 @@ const useShortcutStore = create<ShortcutStore & ShortcutActions>((set, get) => (
 
   removeShortcut: async (id) => {
     try {
+      const shortcutToRemove = get().shortcuts[id];
+      if (!shortcutToRemove) {
+        return { success: false, error: 'Shortcut not found' };
+      }
+
+      const appId = shortcutToRemove.application;
+
+      // Remove the shortcut
       set((state) => {
         const { [id]: removed, ...shortcuts } = state.shortcuts;
         return { shortcuts };
       });
+
+      // If this was a regular app (not macOS) and it was the last shortcut,
+      // automatically remove the app too
+      if (appId !== 'macos') {
+        const remainingShortcuts = Object.values(get().shortcuts).filter(
+          s => s.application === appId
+        );
+
+        if (remainingShortcuts.length === 0) {
+          set((state) => {
+            const { [appId]: removed, ...applications } = state.applications;
+            return { applications };
+          });
+        }
+      }
 
       await get().saveToStorage();
       return { success: true };
@@ -306,17 +329,18 @@ const useShortcutStore = create<ShortcutStore & ShortcutActions>((set, get) => (
     const apps = get().applications;
     const shortcuts = get().shortcuts;
     
-    return Object.values(apps).map(app => {
-      const appShortcuts = Object.values(shortcuts)
-        .filter(s => s.application === app.id)
-        .sort((a, b) => b.updatedAt - a.updatedAt);
-      
-      return {
-        app,
-        shortcuts: appShortcuts.slice(0, 10),
-        hasMore: appShortcuts.length > 10
-      };
-    }).filter(item => item.shortcuts.length > 0);
+    return Object.values(apps)
+      .map(app => {
+        const appShortcuts = Object.values(shortcuts)
+          .filter(s => s.application === app.id)
+          .sort((a, b) => b.updatedAt - a.updatedAt);
+        
+        return {
+          app,
+          shortcuts: appShortcuts.slice(0, 10),
+          hasMore: appShortcuts.length > 10
+        };
+      }).filter(item => item.shortcuts.length > 0);
   },
 }));
 
