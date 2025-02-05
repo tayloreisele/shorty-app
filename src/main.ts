@@ -1,6 +1,5 @@
 import { app, BrowserWindow, globalShortcut, screen } from 'electron';
 import * as path from 'path';
-import './styles/globals.css'
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -32,7 +31,9 @@ const createWindow = (): void => {
     alwaysOnTop: true,
     // Appearance
     hasShadow: false,
-    backgroundColor: '#00000000',
+    backgroundColor: '#00000033',  // 20% opacity base
+    vibrancy: 'fullscreen-ui',     // Native macOS blur
+    visualEffectState: 'active',   // Ensure blur is active
     // Position in exact center of screen
     x: Math.floor(screenWidth / 2 - 350),
     y: Math.floor(screenHeight / 2 - 250),
@@ -42,9 +43,6 @@ const createWindow = (): void => {
     minimizable: false,
     maximizable: false,
     fullscreenable: false,
-    // Enable vibrancy
-    vibrancy: 'fullscreen-ui',
-    visualEffectState: 'active'
   });
 
   // Debug window state
