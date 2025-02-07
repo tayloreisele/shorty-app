@@ -87,7 +87,7 @@ const ShortcutCreator: React.FC<ShortcutCreatorProps> = ({ onClose, isOpen, edit
           name: shortcutName.trim(),
           keys: shortcutKeys.join(''),
           description: shortcutDescription.trim() || undefined,
-          application: isSystemShortcut ? 'macos' : appId!,
+          application: isSystemShortcut ? 'macos' : (appId as string),
           isGlobal: isSystemShortcut,
         });
 
@@ -100,7 +100,7 @@ const ShortcutCreator: React.FC<ShortcutCreatorProps> = ({ onClose, isOpen, edit
           name: shortcutName.trim(),
           keys: shortcutKeys.join(''),
           description: shortcutDescription.trim() || undefined,
-          application: isSystemShortcut ? 'macos' : appId!,
+          application: isSystemShortcut ? 'macos' : (appId as string),
           isGlobal: isSystemShortcut,
           isFavorite: false
         });
@@ -388,7 +388,7 @@ const ShortcutCreator: React.FC<ShortcutCreatorProps> = ({ onClose, isOpen, edit
               <button 
                 className="save-button"
                 onClick={handleSave}
-                disabled={!shortcutName || shortcutKeys.length === 0 || (!selectedApp && !newAppName)}
+                disabled={!shortcutName || shortcutKeys.length === 0 || (!isSystemShortcut && !selectedApp && !newAppName)}
               >
                 Save Shortcut
               </button>

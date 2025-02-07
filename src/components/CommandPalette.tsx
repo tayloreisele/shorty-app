@@ -81,6 +81,7 @@ const CommandPalette: React.FC = () => {
   // Get visible shortcuts for each section
   const visibleSystemShortcuts = filterShortcuts(Object.values(store.shortcuts || {}).filter(s => s.isGlobal));
   const hasMoreSystem = visibleSystemShortcuts.length > MAX_VISIBLE_SHORTCUTS;
+  const limitedSystemShortcuts = visibleSystemShortcuts.slice(0, MAX_VISIBLE_SHORTCUTS);
 
   const visibleFavoriteShortcuts = filterShortcuts(Object.values(store.shortcuts || {}).filter(s => s.isFavorite));
   const hasMoreFavorites = visibleFavoriteShortcuts.length > MAX_VISIBLE_SHORTCUTS;
@@ -423,7 +424,7 @@ const CommandPalette: React.FC = () => {
                 <div className="column">
                   <h2 className="column-title">macOS Shortcuts</h2>
                   <div className="command-list">
-                    {visibleSystemShortcuts.map((shortcut, index) => (
+                    {limitedSystemShortcuts.map((shortcut, index) => (
                       <div 
                         key={shortcut.id} 
                         className={`command-item ${
