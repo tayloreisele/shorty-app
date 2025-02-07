@@ -50,4 +50,21 @@ html, body {
   animation: slideDown 0.2s ease-out forwards;
 }
 
+/* Command palette styles */
+.search-header {
+  -webkit-app-region: drag;
+  padding: 1rem;
+  background: transparent;
+}
+
+/* Ensure interactive elements remain clickable */
+.search-input,
+.add-shortcut-button,
+.command-item,
+.keyboard-shortcut,
+.action-menu,
+button {
+  -webkit-app-region: no-drag;
+}
+
 /* Remove all command palette specific styles */
