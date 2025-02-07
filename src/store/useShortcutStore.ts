@@ -329,10 +329,12 @@ const useShortcutStore = create<ShortcutStore & ShortcutActions>((set, get) => (
     const apps = get().applications;
     const shortcuts = get().shortcuts;
     
+    // Filter out the special 'macos' application ID
     return Object.values(apps)
+      .filter(app => app.id !== 'macos') // Exclude the macOS "app"
       .map(app => {
         const appShortcuts = Object.values(shortcuts)
-          .filter(s => s.application === app.id)
+          .filter(s => s.application === app.id && !s.isGlobal) // Only include non-global shortcuts
           .sort((a, b) => b.updatedAt - a.updatedAt);
         
         return {
