@@ -18,7 +18,7 @@ const KEY_SYMBOLS = {
   'left': '←',
   'up': '↑',
   'down': '↓',
-  'space': 'Space',
+  'space': 'SPACE',
 } as const;
 
 interface KeyboardShortcutProps {
@@ -27,7 +27,7 @@ interface KeyboardShortcutProps {
 
 const KeyboardShortcut: React.FC<KeyboardShortcutProps> = ({ shortcut }) => {
   // Convert the shortcut string into individual keys
-  const keys = shortcut.split('').reduce((acc: string[], char) => {
+  const keys = shortcut.split('').reduce((acc: string[], char, index, array) => {
     // Check if it's a special key symbol
     const specialKey = Object.values(KEY_SYMBOLS).find(symbol => symbol === char);
     if (specialKey) {
@@ -35,8 +35,12 @@ const KeyboardShortcut: React.FC<KeyboardShortcutProps> = ({ shortcut }) => {
     } else if (char === '+') {
       // Skip the plus sign as we'll handle spacing differently
       return acc;
-    } else {
-      // Regular character
+    } else if (char === 'S' && array.slice(index, index + 5).join('') === 'SPACE') {
+      // If we found 'SPACE', add it as a single key and skip the next 4 characters
+      acc.push('SPACE');
+      array.splice(index + 1, 4);
+    } else if (!array.slice(index - 4, index + 1).join('').includes('SPACE')) {
+      // Only add the character if it's not part of 'SPACE'
       acc.push(char);
     }
     return acc;
@@ -45,7 +49,7 @@ const KeyboardShortcut: React.FC<KeyboardShortcutProps> = ({ shortcut }) => {
   return (
     <div className="keyboard-shortcut">
       {keys.map((key, index) => (
-        <span key={index} className="key">{key}</span>
+        <span key={index} className="key" style={key === 'SPACE' ? { minWidth: '50px' } : undefined}>{key}</span>
       ))}
     </div>
   );
